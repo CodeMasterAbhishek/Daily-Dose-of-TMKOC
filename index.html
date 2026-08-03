@@ -20,96 +20,6 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/style.css">
-
-    <style>
-      /* Custom Video Player Styling */
-      .tmkoc-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(9, 13, 22, 0.85);
-        backdrop-filter: blur(12px);
-        z-index: 10000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-      .tmkoc-modal-box {
-        width: 100%;
-        max-width: 960px;
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-        display: flex;
-        flex-direction: column;
-      }
-      .tmkoc-modal-top {
-        padding: 16px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      .tmkoc-modal-top h3 {
-        font-size: 15px;
-        font-weight: 700;
-        color: #f8fafc;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 80%;
-      }
-      .tmkoc-modal-close {
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        color: #94a3b8;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
-      }
-      .tmkoc-modal-close:hover {
-        background: #ef4444;
-        color: white;
-      }
-      .tmkoc-video-frame {
-        width: 100%;
-        aspect-ratio: 16/9;
-        background: #000;
-      }
-      .tmkoc-video-frame iframe {
-        width: 100%;
-        height: 100%;
-      }
-      .tmkoc-modal-bottom {
-        padding: 14px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #090d16;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      .tmkoc-nav-btn {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #f8fafc;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .tmkoc-nav-btn:hover {
-        background: #6366f1;
-      }
-      .tmkoc-ep-badge {
-        font-size: 13px;
-        font-weight: 700;
-        color: #818cf8;
-      }
-    </style>
 </head>
 <body>
 
@@ -135,6 +45,14 @@
     </header>
 
     <main class="container">
+
+        <!-- Search Bar Section with Search Button -->
+        <section class="search-section" style="margin-top: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: center;">
+            <form id="search-form" style="display: flex; gap: 10px; width: 100%; max-width: 650px;">
+                <input type="text" id="search-input" placeholder="Search episode number (e.g. 450, 1500, 2159) or keywords (Jethalal, Bhide)..." style="flex: 1; padding: 12px 20px; border-radius: 9999px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px; outline: none;">
+                <button type="submit" id="search-submit-btn" class="chip active" style="padding: 12px 24px; cursor: pointer; border: none; font-weight: 700; border-radius: 9999px; font-size: 14px;">🔍 Search</button>
+            </form>
+        </section>
 
         <!-- Hero Section -->
         <section id="hero-container" aria-label="Featured episode" style="margin-bottom: var(--space-2xl);">

@@ -1,5 +1,5 @@
 import { fetchNewsData } from './api.js';
-import { renderArticles, renderHeroContainer } from './ui.js';
+import { renderArticles, renderHeroContainer, registerMasterArticles } from './ui.js';
 
 // Setup current year in footer
 const yearEl = document.getElementById('year');
@@ -42,13 +42,16 @@ if (themeToggle) {
     });
 }
 
-// Pagination & Filtering State
+// State
 let allArticles = [];
+let searchQuery = '';
 let currentCategory = sessionStorage.getItem('currentCategory') || 'all';
 const ITEMS_PER_PAGE = 30;
 let currentPage = 1;
 
 const paginationSection = document.getElementById('pagination');
+const searchForm = document.getElementById('search-form');
+const searchInput = document.getElementById('search-input');
 
 // Main Initialization
 async function init() {
@@ -60,6 +63,9 @@ async function init() {
     try {
         allArticles = await fetchNewsData();
         
+        // Register all episodes for cross-category Next/Prev episode navigation
+        registerMasterArticles(allArticles);
+
         // Render Hero Slider
         renderHeroContainer(allArticles, 'hero-container');
 
@@ -73,8 +79,21 @@ async function init() {
 
 function renderPage(append = false) {
     const filteredArticles = allArticles.filter(article => {
-        if (currentCategory === 'all') return true;
-        return article.category.toLowerCase() === currentCategory.toLowerCase();
+        // Category Filter
+        let categoryMatch = true;
+        if (currentCategory !== 'all') {
+            categoryMatch = article.category.toLowerCase() === currentCategory.toLowerCase();
+        }
+
+        // Search Query Filter
+        let searchMatch = true;
+        if (searchQuery) {
+            const epMatch = article.epNumber.toString() === searchQuery || article.epNumber.toString().startsWith(searchQuery);
+            const titleMatch = article.title.toLowerCase().includes(searchQuery);
+            searchMatch = epMatch || titleMatch;
+        }
+
+        return categoryMatch && searchMatch;
     });
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -88,6 +107,24 @@ function renderPage(append = false) {
     } else {
         if (paginationSection) paginationSection.style.display = 'none';
     }
+}
+
+// Search Form Listener
+if (searchForm) {
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        searchQuery = searchInput.value.trim().toLowerCase();
+        currentPage = 1;
+        renderPage(false);
+    });
+}
+
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value.trim().toLowerCase();
+        currentPage = 1;
+        renderPage(false);
+    });
 }
 
 // Category Chips Handler
@@ -109,8 +146,17 @@ filterChips.forEach(chip => {
 window.addEventListener('scroll', () => {
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
         const filteredArticles = allArticles.filter(article => {
-            if (currentCategory === 'all') return true;
-            return article.category.toLowerCase() === currentCategory.toLowerCase();
+            let categoryMatch = true;
+            if (currentCategory !== 'all') {
+                categoryMatch = article.category.toLowerCase() === currentCategory.toLowerCase();
+            }
+            let searchMatch = true;
+            if (searchQuery) {
+                const epMatch = article.epNumber.toString() === searchQuery || article.epNumber.toString().startsWith(searchQuery);
+                const titleMatch = article.title.toLowerCase().includes(searchQuery);
+                searchMatch = epMatch || titleMatch;
+            }
+            return categoryMatch && searchMatch;
         });
 
         if (currentPage * ITEMS_PER_PAGE < filteredArticles.length) {

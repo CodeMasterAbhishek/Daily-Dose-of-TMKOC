@@ -1,8 +1,9 @@
 /**
- * UI module for rendering DailyBrief DOM elements & Clean Native Video Player.
+ * UI module for rendering DailyDose TMKOC DOM elements & Clean Native Video Player.
  */
 
 let allArticlesMap = {};
+let masterEpNumberMap = {}; // Master lookup map by episode number for cross-category seamless navigation
 let currentModalEpNum = null;
 
 window.markAsRead = function(id) {
@@ -21,7 +22,7 @@ window.markAsRead = function(id) {
 
 window.playEpisode = function(id) {
     window.markAsRead(id);
-    const article = allArticlesMap[id];
+    const article = allArticlesMap[id] || masterEpNumberMap[id];
     if (article) {
         openCleanPlayer(article);
     }
@@ -41,6 +42,14 @@ function formatTime(dateString) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// Store in master map for global cross-category navigation
+export function registerMasterArticles(articles) {
+    articles.forEach(art => {
+        allArticlesMap[art.id] = art;
+        masterEpNumberMap[art.epNumber] = art;
+    });
+}
+
 // Generate HTML for the Featured Hero Slider
 function createHeroHTML(articles) {
     if (!articles || articles.length === 0) return '';
@@ -50,6 +59,7 @@ function createHeroHTML(articles) {
     
     articles.forEach((article, index) => {
         allArticlesMap[article.id] = article;
+        masterEpNumberMap[article.epNumber] = article;
         const imageUrl = article.image;
         const activeClass = index === 0 ? 'active' : '';
         
@@ -101,6 +111,7 @@ function createHeroHTML(articles) {
 // Generate HTML for a single article grid card
 function createCardHTML(article) {
     allArticlesMap[article.id] = article;
+    masterEpNumberMap[article.epNumber] = article;
     const imageUrl = article.image;
     
     let readClass = '';
@@ -140,7 +151,7 @@ export function renderArticles(articles, containerId, append = false) {
     }
 
     if (articles.length === 0 && !append) {
-        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; opacity: 0.6;">No episodes found.</div>';
+        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; opacity: 0.6;">No episodes found matching your search.</div>';
         return;
     }
 
@@ -233,7 +244,7 @@ export function renderHeroContainer(articles, containerId) {
 }
 
 // ----------------------------------------------------
-// THEME-AWARE CLEAN PLAYER ENGINE
+// THEME-AWARE CLEAN PLAYER ENGINE (CROSS-CATEGORY)
 // ----------------------------------------------------
 function openCleanPlayer(article) {
     currentModalEpNum = article.epNumber;
@@ -286,10 +297,11 @@ window.closeCleanPlayer = function() {
     document.body.style.overflow = 'auto';
 };
 
+// Seamless Cross-Category Navigation (Ep 1500 -> Ep 1501)
 window.navCleanEp = function(dir) {
     if (!currentModalEpNum) return;
     const targetEp = currentModalEpNum + dir;
-    const targetArticle = Object.values(allArticlesMap).find(a => a.epNumber === targetEp);
+    const targetArticle = masterEpNumberMap[targetEp];
     if (targetArticle) {
         openCleanPlayer(targetArticle);
     }
