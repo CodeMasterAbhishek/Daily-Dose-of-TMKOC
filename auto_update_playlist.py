@@ -43,7 +43,6 @@ def is_single_episode(title: str, description: str, channel: str, ep_num: int) -
     channel_lower = channel.lower()
     combined_text = title_lower + " " + desc_lower
 
-    # 1. Reject explicit multi-episode ranges (e.g., 'ep 1 to 100', 'ep 1-50', '1 to 50')
     if re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d+)\s*(?:to|से)\s*(\d+)\b', combined_text):
         m = re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d+)\s*(?:to|से)\s*(\d+)\b', combined_text)
         if m and int(m.group(1)) != int(m.group(2)):
@@ -51,12 +50,10 @@ def is_single_episode(title: str, description: str, channel: str, ep_num: int) -
             if abs(n2 - n1) > 1:
                 return False
 
-    # 2. Reject full movies / compilations with explicit episode ranges
     if 'full movie' in title_lower or 'compilation' in title_lower or 'best of' in title_lower:
         if re.search(r'\b(\d+)\s*(?:to|-|–|—)\s*(\d+)\b', title_lower):
             return False
 
-    # 3. Match explicit episode number indicators in title or description
     ep_patterns = [
         rf'(?:full\s+)?(?:ep|episode|ep\.|episodes|ep\s*#|एपिसोड)\s*[-:]?\s*0*{ep_num}\b',
         rf'[-:]?\s*0*{ep_num}\s*[-|]\s*(?:taarak|tarak|तारक)\b',
@@ -72,13 +69,11 @@ def is_single_episode(title: str, description: str, channel: str, ep_num: int) -
                     return False
             return True
 
-    # 4. Match standalone number in TMKOC video title or description
     if any(k in combined_text for k in ['taarak', 'tarak', 'तारक', 'tmkoc']):
         num_match = re.search(rf'\b0*{ep_num}\b', combined_text)
         if num_match:
             return True
 
-    # 5. Official Channel Search Index Fallback
     if any(ch in channel_lower for ch in OFFICIAL_CHANNELS):
         if any(k in title_lower for k in ['taarak', 'tarak', 'तारक', 'tmkoc']):
             return True
@@ -138,46 +133,25 @@ def get_youtube_service():
             client_secret=client_secret,
             token_uri="https://oauth2.googleapis.com/token",
         )
-        youtube = build("youtube", "v3", credentials=creds)
-        print("[SUCCESS] YouTube API client authenticated successfully.")
-        return youtube
+        return build("youtube", "v3", credentials=creds)
     except Exception as e:
         print(f"[WARNING] Could not authenticate YouTube API: {e}")
         return None
 
 
-def add_video_to_playlist(youtube, playlist_id: str, video_id: str) -> bool:
-    """Adds a video to the specified YouTube Playlist via API."""
-    if not youtube or not playlist_id:
-        return False
-
-    try:
-        request_body = {
-            "snippet": {
-                "playlistId": playlist_id,
-                "resourceId": {
-                    "kind": "youtube#video",
-                    "videoId": video_id
-                }
-            }
-        }
-        youtube.playlistItems().insert(
-            part="snippet",
-            body=request_body
-        ).execute()
-        print(f"[SUCCESS] Added video {video_id} to YouTube Playlist {playlist_id}!")
-        return True
-    except Exception as e:
-        print(f"[ERROR] Failed to add video {video_id} to playlist: {e}")
-        return False
-
-
 def main():
     print("=======================================================")
-    print("  TMKOC Daily Auto-Sync Playlist Bot")
+    print("  TMKOC Daily Auto-Sync & Batch Populator Bot")
     print("=======================================================")
 
-    # Load state
+    # 1. Run Past Episodes Batch Populator (190 videos per day)
+    try:
+        import populate_daily_batch
+        populate_daily_batch.main()
+    except Exception as e:
+        print(f"[WARNING] Batch populator error: {e}")
+
+    # 2. Check for New Daily Episodes (e.g. Ep 4501, 4502...)
     if not os.path.exists(STATE_FILE):
         print(f"Error: {STATE_FILE} not found!")
         sys.exit(1)
@@ -186,9 +160,8 @@ def main():
         state = json.load(f)
 
     last_ep = state.get("last_episode", 4500)
-    print(f"Current Latest Scraped Episode: Ep {last_ep}")
+    print(f"\nChecking for Brand New Daily Episodes (after Ep {last_ep})...")
 
-    # Check for next episodes
     youtube_service = get_youtube_service()
     playlist_id = os.environ.get("YOUTUBE_PLAYLIST_ID")
 
@@ -196,28 +169,32 @@ def main():
     next_ep = last_ep + 1
 
     while True:
-        print(f"\nSearching for Episode {next_ep} on YouTube...")
+        print(f"Searching for Episode {next_ep} on YouTube...")
         result = find_next_episode(next_ep)
 
         if result:
             vid_id, title, url = result
-            print(f"[FOUND] Episode {next_ep}: {title} ({url})")
+            print(f"[FOUND BRAND NEW EPISODE] Ep {next_ep}: {title} ({url})")
 
             # Append to CSV
             with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow([next_ep, title, url, "Found"])
 
-            # Add to YouTube Playlist if API credentials present
+            # Add to YouTube Playlist if API client present
             if youtube_service and playlist_id:
-                add_video_to_playlist(youtube_service, playlist_id, vid_id)
+                try:
+                    import populate_daily_batch
+                    populate_daily_batch.add_video_to_playlist(youtube_service, playlist_id, vid_id)
+                except Exception as e:
+                    print(f"[WARNING] Could not add new episode to playlist: {e}")
 
             # Update state
             last_ep = next_ep
             episodes_added += 1
             next_ep += 1
         else:
-            print(f"[NOT RELEASED YET] Episode {next_ep} is not available on YouTube yet.")
+            print(f"[UP TO DATE] Episode {next_ep} is not available on YouTube yet.")
             break
 
     # Save state
@@ -230,7 +207,7 @@ def main():
         json.dump(state, f, indent=2)
 
     print("\n=======================================================")
-    print(f" Sync Complete! {episodes_added} new episode(s) added.")
+    print(f" Sync Complete! {episodes_added} new episode(s) detected today.")
     print(f" Latest Episode in DB: Ep {last_ep}")
     print("=======================================================\n")
 
