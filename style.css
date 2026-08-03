@@ -545,6 +545,7 @@ body {
   gap: 8px;
   font-size: 11px;
   color: var(--text-muted);
+}
 
 .story-source {
   font-weight: 700;
