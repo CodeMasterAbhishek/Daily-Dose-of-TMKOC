@@ -25,8 +25,21 @@
 
     <header>
         <div class="container header-content" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-            <a href="#" class="logo" style="flex-shrink: 0;">Daily<span>Dose</span> <small style="font-size: 10px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 4px;">TMKOC</small></a>
             
+            <!-- Left Group: Logo + Search Bar Right Beside Logo -->
+            <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+                <a href="#" class="logo">Daily<span>Dose</span> <small style="font-size: 10px; background: var(--text-primary); color: var(--bg-primary); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 4px;">TMKOC</small></a>
+                
+                <!-- Search Form Right Beside Logo -->
+                <form id="search-form" style="display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 9999px; padding: 4px 6px 4px 14px; width: 220px;">
+                    <input type="text" id="search-input" placeholder="Search episode #..." style="width: 100%; border: none; background: transparent; color: var(--text-primary); font-size: 13px; outline: none;">
+                    <button type="submit" id="search-submit-btn" style="background: var(--text-primary); color: var(--bg-primary); border: none; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;" title="Search">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Middle Group: Category Chips -->
             <section class="filters" aria-label="Category filters" style="margin: 0;">
                 <button class="chip active" data-category="all">All Episodes</button>
                 <button class="chip" data-category="trending">Trending</button>
@@ -36,14 +49,7 @@
                 <button class="chip" data-category="recent">Recent (3001+)</button>
             </section>
 
-            <!-- Search Form Integrated inside Navigation Bar -->
-            <form id="search-form" style="display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 9999px; padding: 4px 6px 4px 14px; width: 100%; max-width: 260px; flex-shrink: 1;">
-                <input type="text" id="search-input" placeholder="Search episode #..." style="width: 100%; border: none; background: transparent; color: var(--text-primary); font-size: 13px; outline: none;">
-                <button type="submit" id="search-submit-btn" style="background: #6366f1; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;" title="Search">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-            </form>
-
+            <!-- Right Group: Fan Stats + Theme Toggle -->
             <nav style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                 <button id="fan-stats-btn" class="chip active" style="padding: 6px 14px; font-size: 12px; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="View Fan Stats & Leaderboard">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
@@ -93,12 +99,12 @@
         </section>
     </main>
 
-    <!-- Professional Theme-Aware Fan Dashboard & Spotify-Style Social Share Modal -->
+    <!-- Theme-Aware Fan Dashboard Modal -->
     <div id="fan-modal-backdrop" class="tmkoc-modal-backdrop">
         <div class="tmkoc-modal-dialog" style="max-width: 750px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
             <div class="tmkoc-modal-header" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
                 <div class="tmkoc-modal-title-wrap">
-                    <span class="tmkoc-modal-badge" style="background: #6366f1; color: white;">DASHBOARD</span>
+                    <span class="tmkoc-modal-badge" style="background: var(--text-primary); color: var(--bg-primary);">DASHBOARD</span>
                     <h3 class="tmkoc-modal-title" style="color: var(--text-primary);">TMKOC Fan Stats & Superfan Leaderboard</h3>
                 </div>
                 <button class="tmkoc-modal-close" onclick="closeFanModal()">✕</button>
@@ -116,49 +122,49 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
                         <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Episodes Watched</div>
-                        <div id="stat-episodes-count" style="font-size: 26px; font-weight: 900; color: #6366f1; margin-top: 4px;">0</div>
+                        <div id="stat-episodes-count" style="font-size: 26px; font-weight: 900; color: var(--text-primary); margin-top: 4px;">0</div>
                         <div style="font-size: 10px; opacity: 0.6; margin-top: 2px; color: var(--text-primary);">(>= 90% Completed)</div>
                     </div>
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
                         <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Exact Watch Time</div>
-                        <div id="stat-watch-hours" style="font-size: 26px; font-weight: 900; color: #10b981; margin-top: 4px;">0h 0m</div>
+                        <div id="stat-watch-hours" style="font-size: 26px; font-weight: 900; color: var(--text-primary); margin-top: 4px;">0h 0m</div>
                         <div style="font-size: 10px; opacity: 0.6; margin-top: 2px; color: var(--text-primary);">(Active Playback Only)</div>
                     </div>
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
                         <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Fan Level Tier</div>
-                        <div id="stat-fan-level" style="font-size: 14px; font-weight: 800; color: #f59e0b; margin-top: 8px;">Gokuldham Resident</div>
+                        <div id="stat-fan-level" style="font-size: 14px; font-weight: 800; color: var(--text-primary); margin-top: 8px;">Gokuldham Resident</div>
                     </div>
                 </div>
 
-                <!-- Spotify-Style Visual Share Card -->
+                <!-- Theme-Matching Visual Share Card -->
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 12px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px;">SPOTIFY-STYLE SHARE CARD</span>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px;">SOCIAL SHARE CARD</span>
                         <button onclick="copyShareCardText()" class="chip active" style="padding: 6px 14px; font-size: 11px; cursor: pointer; border: none; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                             Copy Share Card
                         </button>
                     </div>
 
-                    <!-- Visual Card Element -->
-                    <div id="spotify-card-elem" class="spotify-share-card">
+                    <!-- Visual Card Element (Theme-Matching) -->
+                    <div id="spotify-card-elem" class="spotify-share-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
                         <div class="spotify-card-header">
-                            <div class="spotify-card-brand">Daily<span>Dose</span> <small style="font-size: 9px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">TMKOC</small></div>
-                            <div id="card-user-badge" class="spotify-user-badge">@TMKOCSuperfan</div>
+                            <div class="spotify-card-brand" style="color: var(--text-primary);">Daily<span>Dose</span> <small style="font-size: 9px; background: var(--text-primary); color: var(--bg-primary); padding: 2px 6px; border-radius: 4px; font-weight: 700;">TMKOC</small></div>
+                            <div id="card-user-badge" class="spotify-user-badge" style="background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">@TMKOCSuperfan</div>
                         </div>
 
                         <div class="spotify-card-body">
-                            <div class="spotify-art-box">
+                            <div class="spotify-art-box" style="background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary);">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                             </div>
                             <div class="spotify-stats-info">
-                                <div id="card-tier-badge" class="spotify-tier-title">Gokuldham Resident</div>
-                                <div id="card-main-stat" class="spotify-main-stat">0 Episodes Watched</div>
-                                <div id="card-sub-stat" class="spotify-sub-stat">0 Hours 0 Mins Exact Watch Time</div>
+                                <div id="card-tier-badge" class="spotify-tier-title" style="color: var(--text-primary);">Gokuldham Resident</div>
+                                <div id="card-main-stat" class="spotify-main-stat" style="color: var(--text-primary);">0 Episodes Watched</div>
+                                <div id="card-sub-stat" class="spotify-sub-stat" style="color: var(--text-primary); opacity: 0.7;">0 Hours 0 Mins Exact Watch Time</div>
                             </div>
                         </div>
 
-                        <div class="spotify-card-footer">
+                        <div class="spotify-card-footer" style="border-top: 1px solid var(--border-color); color: var(--text-primary); opacity: 0.7;">
                             <span>CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/</span>
                             <span>#TMKOC #DailyDose</span>
                         </div>

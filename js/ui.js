@@ -1,5 +1,5 @@
 /**
- * UI module for DailyDose TMKOC, Resume Timestamp Player, Exact Watch Tracking (>= 90%), and Spotify-Style Share Card.
+ * UI module for DailyDose TMKOC, Episode Badges, Exact Ranking Search, and Clean Theme Card Design.
  */
 
 let allArticlesMap = {};
@@ -91,7 +91,7 @@ function createHeroHTML(articles) {
                     <div class="hero-content">
                         <div class="hero-meta">
                             <span class="hero-category">${article.category}</span>
-                            <span class="hero-source">${article.source}</span>
+                            <span class="hero-source" style="background: var(--text-primary); color: var(--bg-primary); padding: 2px 8px; border-radius: 4px; font-weight: 800;">EP ${article.epNumber}</span>
                             <span>${article.airDate || ''}</span>
                         </div>
                         <h1 class="hero-title">${article.title}</h1>
@@ -144,9 +144,9 @@ function createCardHTML(article) {
             </a>
             <div class="card-content">
                 <div class="card-meta">
-                    <span class="card-source">${article.source}</span>
+                    <span class="card-source" style="font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">EP ${article.epNumber}</span>
                     <span>•</span>
-                    <span class="card-date">${article.airDate || 'EPISODE ' + article.epNumber}</span>
+                    <span class="card-date">${article.airDate || ''}</span>
                 </div>
                 <h2 class="card-title">
                     <a href="javascript:void(0)" onclick="playEpisode('${article.id}')">${article.title}</a>
@@ -355,13 +355,13 @@ window.navCleanEp = function(dir) {
 };
 
 // ----------------------------------------------------
-// FAN DASHBOARD & SPOTIFY-STYLE SHARE CARD ENGINE
+// FAN DASHBOARD & SOCIAL SHARE CARD ENGINE
 // ----------------------------------------------------
 function getFanLevel(watchedCount) {
-    if (watchedCount >= 1000) return { title: 'Gokuldham Legend', color: '#8b5cf6' };
-    if (watchedCount >= 301) return { title: 'Bapuji\'s Favorite', color: '#f59e0b' };
-    if (watchedCount >= 51) return { title: 'Soda Shop Regular', color: '#3b82f6' };
-    return { title: 'Gokuldham Resident', color: '#10b981' };
+    if (watchedCount >= 1000) return { title: 'Gokuldham Legend', color: 'var(--text-primary)' };
+    if (watchedCount >= 301) return { title: 'Bapuji\'s Favorite', color: 'var(--text-primary)' };
+    if (watchedCount >= 51) return { title: 'Soda Shop Regular', color: 'var(--text-primary)' };
+    return { title: 'Gokuldham Resident', color: 'var(--text-primary)' };
 }
 
 export function updateFanDashboard() {
@@ -419,18 +419,18 @@ function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
 
     let html = '';
     sampleLeaderboard.forEach((item, idx) => {
-        const activeBg = item.isUser ? 'background: rgba(99, 102, 241, 0.15); border-color: #6366f1;' : 'background: var(--bg-secondary);';
+        const activeBg = item.isUser ? 'background: var(--bg-secondary); border-color: var(--text-primary);' : 'background: var(--bg-secondary);';
         html += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); ${activeBg}">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-weight: 800; font-size: 14px; min-width: 30px; color: var(--text-primary);">#${idx + 1}</span>
                     <div>
-                        <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.handle} ${item.isUser ? '<span style="font-size: 10px; background: #6366f1; color: white; padding: 1px 6px; border-radius: 4px;">YOU</span>' : ''}</div>
+                        <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.handle} ${item.isUser ? '<span style="font-size: 10px; background: var(--text-primary); color: var(--bg-primary); padding: 1px 6px; border-radius: 4px;">YOU</span>' : ''}</div>
                         <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.level}</div>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-weight: 800; font-size: 13px; color: #6366f1;">${item.count} Eps</div>
+                    <div style="font-weight: 800; font-size: 13px; color: var(--text-primary);">${item.count} Eps</div>
                     <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.hours} hrs</div>
                 </div>
             </div>
@@ -459,7 +459,7 @@ window.copyShareCardText = function() {
     const shareText = `I've watched ${count} episodes (${hours} Hours) of TMKOC on Daily Dose! My Fan Level: ${level.title} (${handle}). Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/`;
 
     navigator.clipboard.writeText(shareText).then(() => {
-        alert('Copied Spotify-Style Share Card text to clipboard!');
+        alert('Copied Social Share Card text to clipboard!');
     });
 };
 

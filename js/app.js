@@ -74,8 +74,8 @@ async function init() {
     }
 }
 
-function renderPage(append = false) {
-    const filteredArticles = allArticles.filter(article => {
+function getFilteredAndRankedArticles() {
+    return allArticles.filter(article => {
         let categoryMatch = true;
         if (currentCategory !== 'all') {
             categoryMatch = article.category.toLowerCase() === currentCategory.toLowerCase();
@@ -83,13 +83,34 @@ function renderPage(append = false) {
 
         let searchMatch = true;
         if (searchQuery) {
-            const epMatch = article.epNumber.toString() === searchQuery || article.epNumber.toString().startsWith(searchQuery);
-            const titleMatch = article.title.toLowerCase().includes(searchQuery);
-            searchMatch = epMatch || titleMatch;
+            const epStr = article.epNumber.toString();
+            const titleStr = article.title.toLowerCase();
+            searchMatch = epStr === searchQuery || epStr.startsWith(searchQuery) || epStr.includes(searchQuery) || titleStr.includes(searchQuery);
         }
 
         return categoryMatch && searchMatch;
+    }).sort((a, b) => {
+        if (!searchQuery) {
+            return b.epNumber - a.epNumber;
+        }
+
+        const epA = a.epNumber.toString();
+        const epB = b.epNumber.toString();
+
+        // Exact match gets top priority (Rank #1)
+        if (epA === searchQuery && epB !== searchQuery) return -1;
+        if (epB === searchQuery && epA !== searchQuery) return 1;
+
+        // Starts with match gets secondary priority (Rank #2)
+        if (epA.startsWith(searchQuery) && !epB.startsWith(searchQuery)) return -1;
+        if (epB.startsWith(searchQuery) && !epA.startsWith(searchQuery)) return 1;
+
+        return b.epNumber - a.epNumber;
     });
+}
+
+function renderPage(append = false) {
+    const filteredArticles = getFilteredAndRankedArticles();
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -148,19 +169,7 @@ filterChips.forEach(chip => {
 // Infinite Scroll Listener
 window.addEventListener('scroll', () => {
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-        const filteredArticles = allArticles.filter(article => {
-            let categoryMatch = true;
-            if (currentCategory !== 'all') {
-                categoryMatch = article.category.toLowerCase() === currentCategory.toLowerCase();
-            }
-            let searchMatch = true;
-            if (searchQuery) {
-                const epMatch = article.epNumber.toString() === searchQuery || article.epNumber.toString().startsWith(searchQuery);
-                const titleMatch = article.title.toLowerCase().includes(searchQuery);
-                searchMatch = epMatch || titleMatch;
-            }
-            return categoryMatch && searchMatch;
-        });
+        const filteredArticles = getFilteredAndRankedArticles();
 
         if (currentPage * ITEMS_PER_PAGE < filteredArticles.length) {
             currentPage++;
