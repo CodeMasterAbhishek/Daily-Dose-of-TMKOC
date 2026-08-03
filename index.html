@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gokuldham Hub | Taarak Mehta Ka Ooltah Chashmah All Episodes</title>
+  <meta name="description" content="Watch all episodes of Taarak Mehta Ka Ooltah Chashmah (TMKOC) from Episode 1 to the latest daily releases. Instant search, clean video player, and auto-sync updates.">
+  
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">🚂</div>
+        <div class="brand-info">
+          <h1>Gokuldham Hub</h1>
+          <p class="brand-tagline">TMKOC Complete Universe (Ep 1 to Daily Latest)</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-badge">
+          <span class="pulse-dot"></span>
+          <span id="totalEpBadge">4500+ Episodes</span>
+        </div>
+        <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot" target="_blank" class="github-btn" title="GitHub Repository">
+          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Controls & Search Section -->
+  <section class="controls-section">
+    <div class="controls-container">
+
+      <!-- Continue Watching Banner (Dynamic) -->
+      <div id="continueBanner" class="continue-banner hidden">
+        <div class="continue-content">
+          <span class="continue-tag">CONTINUE WATCHING</span>
+          <h3 id="continueTitle">Episode 1 - Taarak Mehta...</h3>
+        </div>
+        <button id="resumeBtn" class="resume-btn">▶ Play Episode</button>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="search-bar-wrapper">
+        <div class="search-input-box">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search by episode number (e.g. 450, 2159) or keywords (Jethalal, Garba, Bhide)...">
+          <button id="clearSearchBtn" class="clear-btn hidden">✕</button>
+        </div>
+
+        <div class="sort-box">
+          <label for="sortOrder">Sort:</label>
+          <select id="sortOrder" class="custom-select">
+            <option value="asc">Oldest First (Ep 1 → End)</option>
+            <option value="desc">Newest First (End → Ep 1)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Era Navigation Tabs -->
+      <nav class="era-tabs">
+        <button class="tab-btn active" data-era="all">All Episodes</button>
+        <button class="tab-btn" data-era="classic">🌟 Classic (Ep 1 - 500)</button>
+        <button class="tab-btn" data-era="golden">💛 Golden (Ep 501 - 1500)</button>
+        <button class="tab-btn" data-era="modern">💙 Modern (Ep 1501 - 3000)</button>
+        <button class="tab-btn" data-era="recent">💜 Recent (Ep 3001+)</button>
+      </nav>
+
+    </div>
+  </section>
+
+  <!-- Main Grid Section -->
+  <main class="main-container">
+    <div id="resultsCount" class="results-info">Showing episodes...</div>
+    
+    <!-- Episode Grid -->
+    <div id="episodeGrid" class="episode-grid">
+      <!-- Loading Skeleton Cards -->
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+
+    <!-- Load More Button -->
+    <div class="load-more-wrapper">
+      <button id="loadMoreBtn" class="load-more-btn hidden">Load More Episodes</button>
+    </div>
+  </main>
+
+  <!-- Video Player Modal (Theatre Mode) -->
+  <div id="playerModal" class="modal-overlay hidden">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="modalTitle">Episode Title</h3>
+        <button id="closeModalBtn" class="close-modal-btn">✕</button>
+      </div>
+
+      <!-- Video Player Frame -->
+      <div class="player-wrapper">
+        <iframe id="youtubeIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Navigation Bar -->
+      <div class="player-nav-bar">
+        <button id="prevEpBtn" class="nav-ep-btn">◀ Previous Episode</button>
+        <span id="modalEpBadge" class="modal-ep-badge">Episode 1</span>
+        <button id="nextEpBtn" class="nav-ep-btn">Next Episode ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>© Gokuldham Hub — Daily Automated TMKOC Aggregator & Sync Bot.</p>
+      <p class="footer-sub">All video rights belong to Sony SAB / Sony PAL / Sony LIV. Built with ❤️ for TMKOC fans.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
