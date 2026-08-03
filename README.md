@@ -1,107 +1,110 @@
-# 📺 Taarak Mehta Ka Ooltah Chashmah (TMKOC) Automated YouTube Playlist Bot
+<div align="center">
+  <h1>Daily Brief — TMKOC Edition 🚂</h1>
+  <p>A premium, blazing-fast, serverless video aggregator & YouTube playlist sync bot powered entirely by GitHub Pages & Actions.</p>
 
-An automated GitHub Actions workflow and Python bot that tracks all episodes of **Taarak Mehta Ka Ooltah Chashmah** on YouTube, maintains a master CSV dataset of 4,500+ episodes, and **automatically searches & adds newly released daily episodes into your personal YouTube Playlist** every single night.
+  <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml">
+    <img src="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml/badge.svg" alt="Daily Sync Status">
+  </a>
+  <a href="https://CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/">
+    <img src="https://img.shields.io/badge/Platform-GitHub%20Pages-success.svg" alt="GitHub Pages">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
+  </a>
+
+  <h3><a href="https://CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/">🌐 View Live Website</a></h3>
+</div>
 
 ---
 
-## 🌟 Features
+## 📌 Project Overview
 
-- **Full Master Dataset**: Contains all 4,500 existing episodes (`episodes.csv`).
-- **Daily Automated Search**: Runs automatically via GitHub Actions every day at 11:30 PM IST (after new episodes are uploaded on YouTube).
-- **Auto YouTube Playlist Sync**: Uses **YouTube Data API v3** to insert newly detected episodes directly into your live YouTube playlist.
-- **Smart Filtering**: Ignores compilations (e.g. "Episode 1 to 100") and identifies official single episode uploads.
-- **100% Free**: Uses YouTube Data API v3 free daily quota (~150 units used out of 10,000 free daily units).
+**Daily Brief — TMKOC Edition** is a modern **GitOps-driven video application** and YouTube playlist manager. 
+
+Instead of paying for backend servers or risking third-party rate limits, this project uses GitHub Actions to automate episode discovery, state tracking, and YouTube playlist syncing. It compiles all 4,500+ episodes into a static dataset (`episodes.csv`) served globally via GitHub Pages CDN.
+
+1. **Automated Scraping & Sync Engine:** Runs daily via GitHub Actions to detect newly released episodes (Sony SAB / Sony PAL) and append them to the master database.
+2. **Auto-Populating Playlist Bot:** Gradually populates past episodes into the official YouTube Playlist (`PLLzj-79gxIKM`) at a rate of 190 videos/day under API quota constraints.
+3. **DailyBrief UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
 
 ---
 
-## 📁 Repository Structure
+## ✨ Features
 
+- **🎮 Custom Video Player:** Interactive player modal with seek scrubbing, volume/fullscreen, playback speed control (0.75x to 2x), and Next/Prev episode buttons.
+- **🎨 DailyBrief Design System:** Premium glassmorphism layout, light/dark mode switcher, featured hero carousel, and era category filter pills.
+- **⚡ 100% Serverless & Free:** Hosted entirely on GitHub Pages CDN with $0 operational cost.
+- **🤖 Automated Daily Sync Bot:** Runs every night at 18:00 UTC (11:30 PM IST) to search for new daily episodes.
+- **📊 4,500+ Episode Database:** Pre-indexed dataset of all Taarak Mehta Ka Ooltah Chashmah episodes with zero missing data.
+
+---
+
+## 📐 Architecture Flow
+
+```mermaid
+sequenceDiagram
+    participant SAB as Official YouTube (Sony SAB)
+    participant Action as GitHub Actions Bot
+    participant DB as episodes.csv & state.json
+    participant API as YouTube Data API v3
+    participant Site as GitHub Pages Web App
+
+    Note over Action: Daily Trigger (18:00 UTC)
+    Action->>SAB: Scrape latest episode releases
+    Action->>DB: Append new episode to CSV & State
+    Action->>API: Add episode to YouTube Playlist (190 batch/day)
+    Action->>DB: Commit updated state back to GitHub
+    DB->>Site: Auto-deploy live web app updates
 ```
-.
-├── .github/
-│   └── workflows/
-│       └── daily_sync.yml        # GitHub Actions workflow (runs daily at 11:30 PM IST)
-├── auto_update_playlist.py       # Main Python sync script
-├── get_youtube_tokens.py         # Helper script to generate YouTube OAuth2 Refresh Token
-├── episodes.csv                  # Complete database of 4,500 TMKOC episodes & URLs
-├── state.json                    # Tracks latest episode number (e.g. 4500)
-├── requirements.txt              # Python dependencies
-└── README.md                     # Setup instructions
+
+---
+
+## 📂 Project Structure
+
+```text
+tmkoc-youtube-playlist-bot/
+├── .github/workflows/
+│   └── daily_sync.yml          # GitHub Action scheduled daily cron
+├── css/
+│   ├── variables.css           # DailyBrief design tokens & color themes
+│   ├── layout.css              # Responsive grid & container layouts
+│   └── style.css               # Main styling & Custom Player CSS
+├── js/
+│   ├── api.js                  # Data ingestion & CSV parser
+│   ├── ui.js                   # DOM renderer & Custom Video Player Engine
+│   └── app.js                  # App initialization, theme & event listeners
+├── auto_update_playlist.py     # Main daily Python sync script
+├── populate_daily_batch.py     # Past episodes batch populator script
+├── episodes.csv                # Master dataset of all 4,500+ episodes
+├── state.json                  # Last processed episode state tracker
+├── index.html                  # Main web application entry point
+└── README.md                   # Complete documentation
 ```
 
 ---
 
-## 🚀 Quick Setup Instructions
+## 🛠️ Setup & Deployment
 
-### Step 1: Push This Code to Your GitHub Repository
-
-1. Go to [github.com/new](https://github.com/new) and create a new repository (e.g., `tmkoc-youtube-playlist-bot`).
-2. Open your terminal in this folder and run:
-
+### 1. Clone Repository
 ```bash
-git init
-git add .
-git commit -m "Initial commit: TMKOC automated playlist bot"
-git branch -M main
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/tmkoc-youtube-playlist-bot.git
-git push -u origin main
+git clone https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot.git
+cd tmkoc-youtube-playlist-bot
 ```
 
----
-
-### Step 2: Get Free YouTube API Credentials (5 Minutes)
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/).
-2. Click **Create Project** (e.g., name it `TMKOC-Bot`).
-3. In the left menu, go to **APIs & Services -> Library**. Search for **YouTube Data API v3** and click **Enable**.
-4. Go to **APIs & Services -> OAuth Consent Screen**:
-   - Choose **External**, fill in App Name & Email, and click **Save**.
-   - Under **Test Users**, click **Add Users** and enter your Google Email address.
-5. Go to **APIs & Services -> Credentials**:
-   - Click **Create Credentials -> OAuth Client ID**.
-   - Application Type: Select **Desktop App** (or Web Application).
-   - Click **Create** and click **Download JSON**.
-   - Save the downloaded file into this project folder as `client_secret.json`.
-
----
-
-### Step 3: Generate Your Refresh Token
-
-Run the included helper script locally on your computer:
-
-```bash
-pip install -r requirements.txt
-python get_youtube_tokens.py
-```
-
-A browser window will open asking you to sign into your Google Account and grant access. After authorizing, the terminal will output:
+### 2. Configure GitHub Secrets
+For automated YouTube Playlist updates, configure the following secrets under **Settings > Secrets and variables > Actions**:
 - `YOUTUBE_CLIENT_ID`
 - `YOUTUBE_CLIENT_SECRET`
 - `YOUTUBE_REFRESH_TOKEN`
+- `YOUTUBE_PLAYLIST_ID`
 
----
-
-### Step 4: Add Secrets to Your GitHub Repository
-
-1. Open your GitHub Repository in your browser.
-2. Go to **Settings -> Secrets and variables -> Actions -> New repository secret**.
-3. Add the following **4 Secrets**:
-
-| Secret Name | Value |
-| :--- | :--- |
-| `YOUTUBE_CLIENT_ID` | Client ID from Step 3 |
-| `YOUTUBE_CLIENT_SECRET` | Client Secret from Step 3 |
-| `YOUTUBE_REFRESH_TOKEN` | Refresh Token from Step 3 |
-| `YOUTUBE_PLAYLIST_ID` | Your YouTube Playlist ID (from your playlist URL `list=PLxxxx...`) |
-
----
-
-### Step 5: You're All Set! 🎉
-
-- Every night at **11:30 PM IST**, GitHub Actions will automatically wake up, search for the next episode (e.g. `Ep 4501`), add it to your YouTube Playlist, and commit the updated `episodes.csv` back to your repo.
-- You can also manually trigger a sync anytime by going to **Actions -> Daily TMKOC Playlist Auto-Sync -> Run workflow**.
+### 3. Enable GitHub Pages
+- Go to **Settings > Pages**.
+- Set Source to **Deploy from a branch**.
+- Select branch `main` and folder `/ (root)`.
+- Save — your website will be live at `https://<username>.github.io/<repository>/`!
 
 ---
 
 ## 📄 License
-MIT License. Free for personal use.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details. Video content rights belong exclusively to Sony SAB / Sony PAL / Sony LIV.
