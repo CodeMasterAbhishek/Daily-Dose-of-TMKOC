@@ -691,62 +691,75 @@ a:hover, a:visited, a:focus, a:active {
   color: #a5b4fc;
 }
 
-/* Premium Header Search Bar Component */
-.nav-search-wrap {
+/* Expandable Circle Search Bar Component */
+.expandable-search-form {
   display: flex;
   align-items: center;
+  position: relative;
+}
+
+.search-circle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 9999px;
-  padding: 0 12px;
-  width: 200px;
-  height: 36px;
-  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nav-search-wrap:focus-within {
-  width: 270px;
-  border-color: var(--text-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.nav-search-wrap .search-icon {
   color: var(--text-primary);
-  opacity: 0.5;
-  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
-.nav-search-wrap input {
-  width: 100%;
-  border: none;
-  background: transparent;
+.search-circle-btn:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.expandable-search-form input {
+  width: 0;
+  opacity: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  background: var(--bg-secondary);
+  border-radius: 9999px;
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 500;
   outline: none;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, padding 0.2s ease, border-color 0.2s ease;
+  pointer-events: none;
 }
 
-.nav-search-wrap input::placeholder {
+.expandable-search-form.active input {
+  width: 260px;
+  opacity: 1;
+  padding: 8px 32px 8px 16px;
+  pointer-events: auto;
+  border-color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.search-close-btn {
+  display: none;
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
   color: var(--text-primary);
-  opacity: 0.45;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 13px;
 }
 
-.search-kbd {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-primary);
-  opacity: 0.5;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 2px 5px;
-  line-height: 1;
-  flex-shrink: 0;
+.expandable-search-form.active .search-close-btn {
+  display: block;
 }
 
-.nav-search-wrap:focus-within .search-kbd {
+.expandable-search-form.active .search-circle-btn {
   display: none;
 }
 

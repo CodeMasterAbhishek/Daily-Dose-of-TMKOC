@@ -133,7 +133,33 @@ if (fanStatsBtn) {
     });
 }
 
-// Search Form Listener
+// Expandable Circle Search Bar Handlers
+const searchTriggerBtn = document.getElementById('search-trigger-btn');
+const searchCloseBtn = document.getElementById('search-close-btn');
+
+function openExpandableSearch() {
+    if (searchForm) searchForm.classList.add('active');
+    if (searchInput) searchInput.focus();
+}
+
+function closeExpandableSearch() {
+    if (searchForm) searchForm.classList.remove('active');
+    if (searchInput) {
+        searchInput.value = '';
+        searchQuery = '';
+    }
+    currentPage = 1;
+    renderPage(false);
+}
+
+if (searchTriggerBtn) {
+    searchTriggerBtn.addEventListener('click', openExpandableSearch);
+}
+
+if (searchCloseBtn) {
+    searchCloseBtn.addEventListener('click', closeExpandableSearch);
+}
+
 if (searchForm) {
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -150,11 +176,12 @@ if (searchInput) {
         renderPage(false);
     });
 
-    // Keyboard shortcut '/' to focus search input
     document.addEventListener('keydown', (e) => {
         if (e.key === '/' && document.activeElement !== searchInput) {
             e.preventDefault();
-            searchInput.focus();
+            openExpandableSearch();
+        } else if (e.key === 'Escape' && searchForm && searchForm.classList.contains('active')) {
+            closeExpandableSearch();
         }
     });
 }
