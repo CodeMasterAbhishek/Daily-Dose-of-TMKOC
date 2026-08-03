@@ -1,5 +1,5 @@
-import { fetchNewsData } from './api.js';
-import { renderArticles, renderHeroContainer, registerMasterArticles, updateFanDashboard } from './ui.js';
+import { fetchNewsData, fetchStorylines } from './api.js';
+import { renderArticles, renderStorylinesGrid, renderHeroContainer, registerMasterArticles, updateFanDashboard } from './ui.js';
 
 // Setup current year in footer
 const yearEl = document.getElementById('year');
@@ -44,6 +44,8 @@ if (themeToggle) {
 
 // State
 let allArticles = [];
+let allStorylines = [];
+let activeStorylineArc = null;
 let searchQuery = '';
 let currentCategory = sessionStorage.getItem('currentCategory') || 'all';
 const ITEMS_PER_PAGE = 30;
@@ -64,17 +66,24 @@ async function init() {
 
     try {
         allArticles = await fetchNewsData();
+        allStorylines = await fetchStorylines();
         
         registerMasterArticles(allArticles);
         renderHeroContainer(allArticles, 'hero-container');
         renderPage();
     } catch (error) {
         console.error("Initialization failed:", error);
-        document.getElementById('news-container').innerHTML = '<p style="color:red">Failed to load news. Please try again later.</p>';
+        document.getElementById('news-container').innerHTML = '<p style="color:red">Failed to load dataset. Please try again later.</p>';
     }
 }
 
 function getFilteredAndRankedArticles() {
+    if (activeStorylineArc) {
+        return allArticles.filter(article => 
+            article.epNumber >= activeStorylineArc.startEp && article.epNumber <= activeStorylineArc.endEp
+        ).sort((a, b) => a.epNumber - b.epNumber); // Chronological sequence for storyline
+    }
+
     return allArticles.filter(article => {
         let categoryMatch = true;
         if (currentCategory !== 'all') {
@@ -97,11 +106,9 @@ function getFilteredAndRankedArticles() {
         const epA = a.epNumber.toString();
         const epB = b.epNumber.toString();
 
-        // Exact match gets top priority (Rank #1)
         if (epA === searchQuery && epB !== searchQuery) return -1;
         if (epB === searchQuery && epA !== searchQuery) return 1;
 
-        // Starts with match gets secondary priority (Rank #2)
         if (epA.startsWith(searchQuery) && !epB.startsWith(searchQuery)) return -1;
         if (epB.startsWith(searchQuery) && !epA.startsWith(searchQuery)) return 1;
 
@@ -110,6 +117,12 @@ function getFilteredAndRankedArticles() {
 }
 
 function renderPage(append = false) {
+    if (currentCategory === 'storylines' && !activeStorylineArc) {
+        renderStorylinesGrid(allStorylines, 'news-container');
+        if (paginationSection) paginationSection.style.display = 'none';
+        return;
+    }
+
     const filteredArticles = getFilteredAndRankedArticles();
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -124,6 +137,13 @@ function renderPage(append = false) {
         if (paginationSection) paginationSection.style.display = 'none';
     }
 }
+
+// Storyline Selection Listener
+window.addEventListener('selectStorylineArc', (e) => {
+    activeStorylineArc = e.detail;
+    currentPage = 1;
+    renderPage(false);
+});
 
 // Fan Stats Modal Event Listener
 if (fanStatsBtn) {
@@ -193,6 +213,7 @@ filterChips.forEach(chip => {
         filterChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
 
+        activeStorylineArc = null;
         currentCategory = chip.getAttribute('data-category');
         sessionStorage.setItem('currentCategory', currentCategory);
 

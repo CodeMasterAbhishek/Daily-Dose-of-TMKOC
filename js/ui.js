@@ -482,14 +482,57 @@ window.copyShareCardText = function() {
     });
 };
 
-window.closeFanModal = function() {
-    const backdrop = document.getElementById('fan-modal-backdrop');
-    if (backdrop) backdrop.style.display = 'none';
+window.allStorylinesMap = {};
+
+window.viewStorylineDetail = function(arcId) {
+    const storyline = window.allStorylinesMap[arcId];
+    if (!storyline) return;
+    
+    const event = new CustomEvent('selectStorylineArc', { detail: storyline });
+    window.dispatchEvent(event);
 };
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        window.closeCleanPlayer();
-        window.closeFanModal();
+export function renderStorylinesGrid(storylines, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!storylines || storylines.length === 0) {
+        container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; opacity: 0.6;">No storylines found.</div>';
+        return;
     }
-});
+
+    const fragment = document.createDocumentFragment();
+
+    storylines.forEach(arc => {
+        window.allStorylinesMap[arc.id] = arc;
+        const coverEpObj = masterEpNumberMap[arc.coverEp] || masterEpNumberMap[arc.startEp];
+        const coverImg = coverEpObj ? coverEpObj.image : `https://img.youtube.com/vi/placeholder/hqdefault.jpg`;
+
+        const card = document.createElement('article');
+        card.className = 'card storyline-card';
+        card.style.cursor = 'pointer';
+        card.onclick = () => window.viewStorylineDetail(arc.id);
+
+        card.innerHTML = `
+            <div class="card-img-wrap">
+                <img src="${coverImg}" alt="${arc.title}" loading="lazy" class="card-img" onerror="this.src='https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Storyline'">
+                <span class="card-duration-badge" style="background: rgba(15,23,42,0.85); font-weight: 800;">${arc.totalEpisodes} EPISODES</span>
+            </div>
+            <div class="card-content">
+                <div class="card-meta">
+                    <span class="card-source" style="font-weight: 800; color: var(--text-primary); text-transform: uppercase;">EP ${arc.startEp} TO EP ${arc.endEp}</span>
+                </div>
+                <h2 class="card-title" style="margin-top: 4px;">
+                    <a href="javascript:void(0)" onclick="window.viewStorylineDetail('${arc.id}')">${arc.title}</a>
+                </h2>
+                <p style="font-size: 12px; opacity: 0.75; margin-top: 6px; line-height: 1.4; color: var(--text-primary);">${arc.description}</p>
+            </div>
+        `;
+
+        fragment.appendChild(card);
+    });
+
+    container.appendChild(fragment);
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "arc_water_crisis",
+    "title": "Water Shortage Crisis in Gokuldham",
+    "tagline": "Gokuldham Society Water Pipeline Breakdown",
+    "description": "Gokuldham Society faces a major water pipeline breakdown, leading to hilarious morning chaos among Jethalal, Bhide, Sodhi, and Popatlal.",
+    "startEp": 120,
+    "endEp": 135,
+    "totalEpisodes": 16,
+    "category": "Classic",
+    "coverEp": 125
+  },
+  {
+    "id": "arc_gulabo_kutch",
+    "title": "Gulabo Marriage Case in Kutch",
+    "tagline": "Jethalal's Secret Marriage Scandal",
+    "description": "A woman named Gulabo arrives in Gokuldham claiming she is Jethalal's lawfully wedded wife from a film shooting in Kutch!",
+    "startEp": 900,
+    "endEp": 930,
+    "totalEpisodes": 31,
+    "category": "Golden",
+    "coverEp": 915
+  },
+  {
+    "id": "arc_bapuji_hikki",
+    "title": "Champaklal's Unstoppable Hiccups",
+    "tagline": "Bapuji's Medical Emergency",
+    "description": "Bapuji suffers from non-stop hiccups that won't go away, prompting the entire Gokuldham society to try hilarious remedies.",
+    "startEp": 450,
+    "endEp": 465,
+    "totalEpisodes": 16,
+    "category": "Classic",
+    "coverEp": 455
+  },
+  {
+    "id": "arc_gpl_season_1",
+    "title": "Gokuldham Premier League (GPL 1)",
+    "tagline": "Jetha Ke Janbaaz vs Daya Ke Daredevils",
+    "description": "The iconic cricket tournament in Gokuldham Society pitting Jethalal's team against Daya's team for ultimate bragging rights.",
+    "startEp": 260,
+    "endEp": 280,
+    "totalEpisodes": 21,
+    "category": "Classic",
+    "coverEp": 270
+  },
+  {
+    "id": "arc_spiderman_gokuldham",
+    "title": "Spider-Man In Gokuldham (18th Anniversary)",
+    "tagline": "Special Guest Arrival in Gokuldham",
+    "description": "Spider-Man visits Gokuldham Society to celebrate 18 glorious years of Taarak Mehta Ka Ooltah Chashmah with all residents.",
+    "startEp": 4775,
+    "endEp": 4778,
+    "totalEpisodes": 4,
+    "category": "Recent",
+    "coverEp": 4778
+  }
+]

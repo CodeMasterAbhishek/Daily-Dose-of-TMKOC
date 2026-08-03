@@ -88,3 +88,14 @@ export async function fetchNewsData() {
         return [];
     }
 }
+
+export async function fetchStorylines() {
+    try {
+        const response = await fetch(`storylines.json?t=${new Date().getTime()}`);
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (e) {
+        console.error("Could not fetch storylines dataset:", e);
+        return [];
+    }
+}
