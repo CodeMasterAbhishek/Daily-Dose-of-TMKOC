@@ -1,178 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Brief - TMKOC Edition | Taarak Mehta Ka Ooltah Chashmah</title>
-  <meta name="description" content="A premium, blazing-fast, serverless TMKOC episode aggregator powered by GitHub Pages. Watch all episodes from Ep 1 to Latest.">
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="light-mode">
-  
-  <!-- Header / Navigation Bar (Exact DailyBrief Header Layout) -->
-  <header class="app-header">
-    <div class="header-container">
-      
-      <!-- Brand Logo -->
-      <div class="brand">
-        <a href="#" class="logo-text">Daily<span>Brief</span> <small class="brand-sub">TMKOC</small></a>
-      </div>
-
-      <!-- Category Filter Pills Bar -->
-      <nav class="category-pills">
-        <button class="pill-btn active" data-category="all">All Episodes</button>
-        <button class="pill-btn" data-category="trending">Trending</button>
-        <button class="pill-btn" data-category="classic">Classic (1-500)</button>
-        <button class="pill-btn" data-category="golden">Golden (501-1500)</button>
-        <button class="pill-btn" data-category="modern">Modern (1501-3000)</button>
-        <button class="pill-btn" data-category="recent">Latest Releases</button>
-      </nav>
-
-      <!-- Theme Switcher & Actions -->
-      <div class="header-right">
-        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
-          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </button>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- Search & Secondary Bar -->
-  <div class="sub-header">
-    <div class="sub-header-container">
-      <div class="search-box">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Search by episode number (e.g., 450, 2159) or title keywords (Jethalal, Garba, Bhide)...">
-        <button id="clearSearchBtn" class="clear-search hidden">✕</button>
-      </div>
-
-      <div class="sort-selector">
-        <label for="sortOrder">Sort Order:</label>
-        <select id="sortOrder">
-          <option value="desc">Newest First (Latest Releases)</option>
-          <option value="asc">Oldest First (Ep 1 → End)</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <main class="main-content">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Brief | TMKOC Edition</title>
     
-    <!-- Hero Showcase Carousel (Exact DailyBrief Featured Carousel) -->
-    <section class="hero-carousel-section">
-      <div class="carousel-container">
-        
-        <!-- Hero Card -->
-        <div id="heroCard" class="hero-card">
-          <div class="hero-image-wrapper">
-            <img id="heroImage" src="" alt="Featured Episode">
-            <div class="hero-gradient-overlay"></div>
-          </div>
+    <!-- Meta Tags for SEO & Social -->
+    <meta name="description" content="Curated daily TMKOC episodes across all seasons from Episode 1 to latest. The most important episodes of Gokuldham Society, with zero noise.">
+    <meta property="og:title" content="Daily Brief - TMKOC Edition">
+    <meta property="og:description" content="The absolute top episodes across all seasons of Taarak Mehta Ka Ooltah Chashmah today.">
+    <meta property="og:type" content="website">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/style.css">
 
-          <!-- Hero Content Info -->
-          <div class="hero-content">
-            <div class="hero-meta-tags">
-              <span id="heroBadgeTag" class="tag-badge trending">TRENDING</span>
-              <span id="heroChannelTag" class="tag-source">SONY SAB</span>
-              <span id="heroEpBadge" class="tag-time">EPISODE 4500</span>
-            </div>
+    <style>
+      /* Modal Theatre Player Styling */
+      .tmkoc-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(9, 13, 22, 0.85);
+        backdrop-filter: blur(12px);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .tmkoc-modal-box {
+        width: 100%;
+        max-width: 960px;
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+      }
+      .tmkoc-modal-top {
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .tmkoc-modal-top h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #f8fafc;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 80%;
+      }
+      .tmkoc-modal-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #94a3b8;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .tmkoc-modal-close:hover {
+        background: #ef4444;
+        color: white;
+      }
+      .tmkoc-video-frame {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+      }
+      .tmkoc-video-frame iframe {
+        width: 100%;
+        height: 100%;
+      }
+      .tmkoc-modal-bottom {
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #090d16;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .tmkoc-nav-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f8fafc;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tmkoc-nav-btn:hover {
+        background: #6366f1;
+      }
+      .tmkoc-ep-badge {
+        font-size: 13px;
+        font-weight: 700;
+        color: #818cf8;
+      }
+    </style>
+</head>
+<body>
 
-            <h2 id="heroTitle" class="hero-title">Episode 4500 - Bachho Ki Zidd | Taarak Mehta Ka Ooltah Chashmah</h2>
-            <p id="heroSubtitle" class="hero-subtitle">Watch full single episode of Gokuldham Society adventures. Click to play in theatre player.</p>
+    <header>
+        <div class="container header-content">
+            <a href="#" class="logo">Daily<span>Brief</span> <small style="font-size: 10px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px;">TMKOC</small></a>
+            
+            <section class="filters" aria-label="Category filters">
+                <button class="chip active" data-category="all">All News</button>
+                <button class="chip" data-category="trending">Trending</button>
+                <button class="chip" data-category="classic">Classic (1-500)</button>
+                <button class="chip" data-category="golden">Golden (501-1500)</button>
+                <button class="chip" data-category="modern">Modern (1501-3000)</button>
+                <button class="chip" data-category="recent">Recent (3001+)</button>
+            </section>
 
-            <button id="heroPlayBtn" class="hero-play-btn">▶ Watch Episode</button>
-          </div>
-
-          <!-- Left & Right Carousel Arrows -->
-          <button id="heroPrevBtn" class="carousel-nav-btn prev">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <button id="heroNextBtn" class="carousel-nav-btn next">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-
-          <!-- Slide Progress Dots -->
-          <div id="heroDots" class="carousel-dots">
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-
+            <nav>
+                <button id="theme-toggle" class="btn-icon" aria-label="Toggle Dark Mode">
+                    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </nav>
         </div>
+    </header>
 
-      </div>
-    </section>
+    <main class="container">
 
-    <!-- News / Episodes Grid Section -->
-    <section class="episodes-grid-section">
-      <div class="section-header">
-        <h3 id="sectionTitle">Latest Episodes</h3>
-        <span id="resultsCount" class="results-count">Showing 24 episodes</span>
-      </div>
+        <!-- Hero Section (Exact DailyBrief Featured Carousel) -->
+        <section id="hero-container" aria-label="Featured article" style="margin-bottom: var(--space-2xl);">
+        </section>
 
-      <!-- Grid Cards Container -->
-      <div id="episodeGrid" class="cards-grid">
-        <!-- Loading Skeletons -->
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-      </div>
+        <!-- Dynamic Content Area (Grid) -->
+        <section id="news-container" class="news-grid" aria-live="polite">
+        </section>
+        
+        <!-- Inject perfect grid of skeletons instantly before main JS loads -->
+        <script>
+            function renderSkeletons() {
+                var container = document.getElementById('news-container');
+                if (!container || (container.innerHTML.trim() !== '' && !container.innerHTML.includes('skeleton-text'))) return;
+                
+                var width = window.innerWidth || document.documentElement.clientWidth || 1024;
+                var height = window.innerHeight || document.documentElement.clientHeight || 768;
+                
+                var columns = width > 768 ? Math.max(1, Math.floor((width * 0.95) / 340)) : 1;
+                var rows = Math.max(2, Math.ceil(height / 400));
+                var total = columns * rows;
+                
+                var skeletonHTML = '<article class="card"><div class="card-img-wrap skeleton"></div><div class="card-content"><div class="skeleton skeleton-text short"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div></div></article>';
+                container.innerHTML = skeletonHTML.repeat(total);
+            }
+            renderSkeletons();
+            window.addEventListener('resize', renderSkeletons);
+            document.addEventListener('DOMContentLoaded', renderSkeletons);
+        </script>
 
-      <!-- Load More Button -->
-      <div class="load-more-container">
-        <button id="loadMoreBtn" class="load-more-btn hidden">Load More Stories</button>
-      </div>
-    </section>
+        <!-- Infinite Scroll Sentinel -->
+        <section id="pagination" style="text-align: center; margin-top: 3rem; margin-bottom: 1rem; display: none;">
+            <div style="opacity: 0.6; font-size: 0.9rem;">Loading more episodes...</div>
+        </section>
+    </main>
 
-  </main>
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="year"></span> Daily Brief TMKOC Edition.</p>
+        </div>
+    </footer>
 
-  <!-- Video Player Modal (Theatre Player) -->
-  <div id="playerModal" class="modal-backdrop hidden">
-    <div class="modal-dialog">
-      <div class="modal-top">
-        <h3 id="modalTitle">Episode Title</h3>
-        <button id="closeModalBtn" class="close-btn">✕</button>
-      </div>
-
-      <div class="video-container">
-        <iframe id="youtubeIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-      </div>
-
-      <div class="modal-controls">
-        <button id="prevEpBtn" class="modal-nav-btn">◀ Previous Ep</button>
-        <span id="modalEpTag" class="modal-ep-tag">Episode 1</span>
-        <button id="nextEpBtn" class="modal-nav-btn">Next Ep ▶</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="app-footer">
-    <div class="footer-inner">
-      <p><strong>DailyBrief TMKOC Edition</strong> — Powered by Serverless GitHub Pages GitOps Pipeline.</p>
-      <p class="footer-copy">All content owned by Sony SAB / Sony PAL. Built for demonstration & indexing purposes.</p>
-    </div>
-  </footer>
-
-  <script src="app.js"></script>
+    <!-- Scripts -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
