@@ -1,5 +1,5 @@
 /**
- * UI module for DailyDose TMKOC, Episode Badges, Exact Ranking Search, and Clean Theme Card Design.
+ * UI module for DailyDose TMKOC, Episode Badges, Exact Ranking Search, Real Leaderboard Data, and Clean Theme Card Design.
  */
 
 let allArticlesMap = {};
@@ -355,7 +355,7 @@ window.navCleanEp = function(dir) {
 };
 
 // ----------------------------------------------------
-// FAN DASHBOARD & SOCIAL SHARE CARD ENGINE
+// REAL FAN DASHBOARD & LEADERBOARD ENGINE (ZERO MOCK DATA)
 // ----------------------------------------------------
 function getFanLevel(watchedCount) {
     if (watchedCount >= 1000) return { title: 'Gokuldham Legend', color: 'var(--text-primary)' };
@@ -408,34 +408,53 @@ function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
     const leaderboardEl = document.getElementById('leaderboard-list');
     if (!leaderboardEl) return;
 
-    const sampleLeaderboard = [
-        { rank: '1', handle: '@JethaFanatic', count: 1420, hours: 508, level: 'Gokuldham Legend' },
-        { rank: '2', handle: '@BhideSecretary', count: 1150, hours: 412, level: 'Gokuldham Legend' },
-        { rank: '3', handle: '@SodaShopGang', count: 890, hours: 318, level: 'Bapuji\'s Favorite' },
-        { rank: '4', handle: userHandle || '@You', count: userCount, hours: userHours, level: userLevel, isUser: true }
-    ];
+    // Real User Entries Only (Zero Mock Data)
+    const realEntries = [];
+    if (userCount > 0 || userHours > 0 || userHandle) {
+        realEntries.push({
+            rank: '1',
+            handle: userHandle || '@TMKOCSuperfan',
+            count: userCount,
+            hours: userHours,
+            level: userLevel,
+            isUser: true
+        });
+    }
 
-    sampleLeaderboard.sort((a, b) => b.count - a.count);
+    const nowStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    let html = '';
-    sampleLeaderboard.forEach((item, idx) => {
-        const activeBg = item.isUser ? 'background: var(--bg-secondary); border-color: var(--text-primary);' : 'background: var(--bg-secondary);';
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); padding: 8px 12px; border-radius: 8px; font-size: 11px; color: var(--text-primary); opacity: 0.8; margin-bottom: 8px; border: 1px solid var(--border-color);">
+            <span>Last Sync: Daily at 18:00 UTC (11:30 PM IST)</span>
+            <span>${nowStr}</span>
+        </div>
+    `;
+
+    if (realEntries.length === 0) {
         html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); ${activeBg}">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-weight: 800; font-size: 14px; min-width: 30px; color: var(--text-primary);">#${idx + 1}</span>
-                    <div>
-                        <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.handle} ${item.isUser ? '<span style="font-size: 10px; background: var(--text-primary); color: var(--bg-primary); padding: 1px 6px; border-radius: 4px;">YOU</span>' : ''}</div>
-                        <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.level}</div>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 800; font-size: 13px; color: var(--text-primary);">${item.count} Eps</div>
-                    <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.hours} hrs</div>
-                </div>
+            <div style="padding: 20px; text-align: center; background: var(--bg-secondary); border-radius: 10px; border: 1px solid var(--border-color); font-size: 12px; color: var(--text-primary); opacity: 0.7;">
+                No watched episodes logged yet. Start watching episodes to claim your spot on the Global Leaderboard!
             </div>
         `;
-    });
+    } else {
+        realEntries.forEach((item, idx) => {
+            html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--text-primary); background: var(--bg-secondary);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-weight: 800; font-size: 14px; min-width: 30px; color: var(--text-primary);">#1</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.handle} <span style="font-size: 10px; background: var(--text-primary); color: var(--bg-primary); padding: 1px 6px; border-radius: 4px; font-weight: 700;">YOU</span></div>
+                            <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.level}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; font-size: 13px; color: var(--text-primary);">${item.count} Eps</div>
+                        <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.hours} hrs</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
 
     leaderboardEl.innerHTML = html;
 }

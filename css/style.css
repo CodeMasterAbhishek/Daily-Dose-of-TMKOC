@@ -366,11 +366,11 @@ a:hover, a:visited, a:focus, a:active {
 }
 
 .card-title a:hover {
-  color: #6366f1;
+  color: #2563eb;
 }
 
 .card:hover .card-title, .card:hover .card-title a {
-  color: #6366f1;
+  color: #2563eb;
 }
 
 .card-actions {
