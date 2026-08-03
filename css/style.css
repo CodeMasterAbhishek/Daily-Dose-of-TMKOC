@@ -335,8 +335,19 @@
   color: var(--text-primary);
 }
 
+/* Link Reset - No blue underline hyperlinks */
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+a:hover, a:visited, a:focus, a:active {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
 .card-title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-family: var(--font-sans);
   font-weight: 700;
   line-height: 1.4;
@@ -349,8 +360,17 @@
   transition: color var(--transition-fast);
 }
 
-.card:hover .card-title {
-  color: var(--accent);
+.card-title a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.card-title a:hover {
+  color: #6366f1;
+}
+
+.card:hover .card-title, .card:hover .card-title a {
+  color: #6366f1;
 }
 
 .card-actions {
