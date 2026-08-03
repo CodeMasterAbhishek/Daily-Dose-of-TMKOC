@@ -3,135 +3,173 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gokuldham Hub | Taarak Mehta Ka Ooltah Chashmah All Episodes</title>
-  <meta name="description" content="Watch all episodes of Taarak Mehta Ka Ooltah Chashmah (TMKOC) from Episode 1 to the latest daily releases. Instant search, clean video player, and auto-sync updates.">
+  <title>Daily Brief - TMKOC Edition | Taarak Mehta Ka Ooltah Chashmah</title>
+  <meta name="description" content="A premium, blazing-fast, serverless TMKOC episode aggregator powered by GitHub Pages. Watch all episodes from Ep 1 to Latest.">
   
-  <!-- Google Fonts & Icons -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <!-- Header / Navigation -->
+<body class="light-mode">
+  
+  <!-- Header / Navigation Bar (Exact DailyBrief Header Layout) -->
   <header class="app-header">
     <div class="header-container">
+      
+      <!-- Brand Logo -->
       <div class="brand">
-        <div class="brand-logo">🚂</div>
-        <div class="brand-info">
-          <h1>Gokuldham Hub</h1>
-          <p class="brand-tagline">TMKOC Complete Universe (Ep 1 to Daily Latest)</p>
-        </div>
+        <a href="#" class="logo-text">Daily<span>Brief</span> <small class="brand-sub">TMKOC</small></a>
       </div>
 
-      <div class="header-actions">
-        <div class="status-badge">
-          <span class="pulse-dot"></span>
-          <span id="totalEpBadge">4500+ Episodes</span>
-        </div>
-        <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot" target="_blank" class="github-btn" title="GitHub Repository">
-          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      <!-- Category Filter Pills Bar -->
+      <nav class="category-pills">
+        <button class="pill-btn active" data-category="all">All Episodes</button>
+        <button class="pill-btn" data-category="trending">Trending</button>
+        <button class="pill-btn" data-category="classic">Classic (1-500)</button>
+        <button class="pill-btn" data-category="golden">Golden (501-1500)</button>
+        <button class="pill-btn" data-category="modern">Modern (1501-3000)</button>
+        <button class="pill-btn" data-category="recent">Latest Releases</button>
+      </nav>
+
+      <!-- Theme Switcher & Actions -->
+      <div class="header-right">
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
-          <span>GitHub</span>
-        </a>
+        </button>
       </div>
+
     </div>
   </header>
 
-  <!-- Hero Controls & Search Section -->
-  <section class="controls-section">
-    <div class="controls-container">
-
-      <!-- Continue Watching Banner (Dynamic) -->
-      <div id="continueBanner" class="continue-banner hidden">
-        <div class="continue-content">
-          <span class="continue-tag">CONTINUE WATCHING</span>
-          <h3 id="continueTitle">Episode 1 - Taarak Mehta...</h3>
-        </div>
-        <button id="resumeBtn" class="resume-btn">▶ Play Episode</button>
+  <!-- Search & Secondary Bar -->
+  <div class="sub-header">
+    <div class="sub-header-container">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search by episode number (e.g., 450, 2159) or title keywords (Jethalal, Garba, Bhide)...">
+        <button id="clearSearchBtn" class="clear-search hidden">✕</button>
       </div>
 
-      <!-- Search & Filters -->
-      <div class="search-bar-wrapper">
-        <div class="search-input-box">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="searchInput" placeholder="Search by episode number (e.g. 450, 2159) or keywords (Jethalal, Garba, Bhide)...">
-          <button id="clearSearchBtn" class="clear-btn hidden">✕</button>
-        </div>
-
-        <div class="sort-box">
-          <label for="sortOrder">Sort:</label>
-          <select id="sortOrder" class="custom-select">
-            <option value="asc">Oldest First (Ep 1 → End)</option>
-            <option value="desc">Newest First (End → Ep 1)</option>
-          </select>
-        </div>
+      <div class="sort-selector">
+        <label for="sortOrder">Sort Order:</label>
+        <select id="sortOrder">
+          <option value="desc">Newest First (Latest Releases)</option>
+          <option value="asc">Oldest First (Ep 1 → End)</option>
+        </select>
       </div>
-
-      <!-- Era Navigation Tabs -->
-      <nav class="era-tabs">
-        <button class="tab-btn active" data-era="all">All Episodes</button>
-        <button class="tab-btn" data-era="classic">🌟 Classic (Ep 1 - 500)</button>
-        <button class="tab-btn" data-era="golden">💛 Golden (Ep 501 - 1500)</button>
-        <button class="tab-btn" data-era="modern">💙 Modern (Ep 1501 - 3000)</button>
-        <button class="tab-btn" data-era="recent">💜 Recent (Ep 3001+)</button>
-      </nav>
-
     </div>
-  </section>
+  </div>
 
-  <!-- Main Grid Section -->
-  <main class="main-container">
-    <div id="resultsCount" class="results-info">Showing episodes...</div>
+  <main class="main-content">
     
-    <!-- Episode Grid -->
-    <div id="episodeGrid" class="episode-grid">
-      <!-- Loading Skeleton Cards -->
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-    </div>
+    <!-- Hero Showcase Carousel (Exact DailyBrief Featured Carousel) -->
+    <section class="hero-carousel-section">
+      <div class="carousel-container">
+        
+        <!-- Hero Card -->
+        <div id="heroCard" class="hero-card">
+          <div class="hero-image-wrapper">
+            <img id="heroImage" src="" alt="Featured Episode">
+            <div class="hero-gradient-overlay"></div>
+          </div>
 
-    <!-- Load More Button -->
-    <div class="load-more-wrapper">
-      <button id="loadMoreBtn" class="load-more-btn hidden">Load More Episodes</button>
-    </div>
+          <!-- Hero Content Info -->
+          <div class="hero-content">
+            <div class="hero-meta-tags">
+              <span id="heroBadgeTag" class="tag-badge trending">TRENDING</span>
+              <span id="heroChannelTag" class="tag-source">SONY SAB</span>
+              <span id="heroEpBadge" class="tag-time">EPISODE 4500</span>
+            </div>
+
+            <h2 id="heroTitle" class="hero-title">Episode 4500 - Bachho Ki Zidd | Taarak Mehta Ka Ooltah Chashmah</h2>
+            <p id="heroSubtitle" class="hero-subtitle">Watch full single episode of Gokuldham Society adventures. Click to play in theatre player.</p>
+
+            <button id="heroPlayBtn" class="hero-play-btn">▶ Watch Episode</button>
+          </div>
+
+          <!-- Left & Right Carousel Arrows -->
+          <button id="heroPrevBtn" class="carousel-nav-btn prev">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button id="heroNextBtn" class="carousel-nav-btn next">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          <!-- Slide Progress Dots -->
+          <div id="heroDots" class="carousel-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- News / Episodes Grid Section -->
+    <section class="episodes-grid-section">
+      <div class="section-header">
+        <h3 id="sectionTitle">Latest Episodes</h3>
+        <span id="resultsCount" class="results-count">Showing 24 episodes</span>
+      </div>
+
+      <!-- Grid Cards Container -->
+      <div id="episodeGrid" class="cards-grid">
+        <!-- Loading Skeletons -->
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="load-more-container">
+        <button id="loadMoreBtn" class="load-more-btn hidden">Load More Stories</button>
+      </div>
+    </section>
+
   </main>
 
-  <!-- Video Player Modal (Theatre Mode) -->
-  <div id="playerModal" class="modal-overlay hidden">
-    <div class="modal-container">
-      <div class="modal-header">
+  <!-- Video Player Modal (Theatre Player) -->
+  <div id="playerModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-top">
         <h3 id="modalTitle">Episode Title</h3>
-        <button id="closeModalBtn" class="close-modal-btn">✕</button>
+        <button id="closeModalBtn" class="close-btn">✕</button>
       </div>
 
-      <!-- Video Player Frame -->
-      <div class="player-wrapper">
+      <div class="video-container">
         <iframe id="youtubeIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
 
-      <!-- Navigation Bar -->
-      <div class="player-nav-bar">
-        <button id="prevEpBtn" class="nav-ep-btn">◀ Previous Episode</button>
-        <span id="modalEpBadge" class="modal-ep-badge">Episode 1</span>
-        <button id="nextEpBtn" class="nav-ep-btn">Next Episode ▶</button>
+      <div class="modal-controls">
+        <button id="prevEpBtn" class="modal-nav-btn">◀ Previous Ep</button>
+        <span id="modalEpTag" class="modal-ep-tag">Episode 1</span>
+        <button id="nextEpBtn" class="modal-nav-btn">Next Ep ▶</button>
       </div>
     </div>
   </div>
 
   <!-- Footer -->
   <footer class="app-footer">
-    <div class="footer-container">
-      <p>© Gokuldham Hub — Daily Automated TMKOC Aggregator & Sync Bot.</p>
-      <p class="footer-sub">All video rights belong to Sony SAB / Sony PAL / Sony LIV. Built with ❤️ for TMKOC fans.</p>
+    <div class="footer-inner">
+      <p><strong>DailyBrief TMKOC Edition</strong> — Powered by Serverless GitHub Pages GitOps Pipeline.</p>
+      <p class="footer-copy">All content owned by Sony SAB / Sony PAL. Built for demonstration & indexing purposes.</p>
     </div>
   </footer>
 
