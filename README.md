@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Daily Brief — TMKOC Edition 🚂</h1>
+  <h1>Daily Dose of TMKOC 🚂</h1>
   <p>A premium, blazing-fast, serverless video aggregator & YouTube playlist sync bot powered entirely by GitHub Pages & Actions.</p>
 
   <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml">
@@ -19,20 +19,20 @@
 
 ## 📌 Project Overview
 
-**Daily Brief — TMKOC Edition** is a modern **GitOps-driven video application** and YouTube playlist manager. 
+**Daily Dose of TMKOC** is a modern **GitOps-driven video application** and YouTube playlist manager. 
 
 Instead of paying for backend servers or risking third-party rate limits, this project uses GitHub Actions to automate episode discovery, state tracking, and YouTube playlist syncing. It compiles all 4,500+ episodes into a static dataset (`episodes.csv`) served globally via GitHub Pages CDN.
 
 1. **Automated Scraping & Sync Engine:** Runs daily via GitHub Actions to detect newly released episodes (Sony SAB / Sony PAL) and append them to the master database.
 2. **Auto-Populating Playlist Bot:** Gradually populates past episodes into the official YouTube Playlist (`PLLzj-79gxIKM`) at a rate of 190 videos/day under API quota constraints.
-3. **DailyBrief UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
+3. **Glassmorphic UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
 
 ---
 
 ## ✨ Features
 
 - **🎮 Custom Video Player:** Interactive player modal with seek scrubbing, volume/fullscreen, playback speed control (0.75x to 2x), and Next/Prev episode buttons.
-- **🎨 DailyBrief Design System:** Premium glassmorphism layout, light/dark mode switcher, featured hero carousel, and era category filter pills.
+- **🎨 Modern Glassmorphism UI:** Clean light/dark mode switcher, featured hero carousel, and era category filter pills (`Classic`, `Golden`, `Modern`, `Recent`).
 - **⚡ 100% Serverless & Free:** Hosted entirely on GitHub Pages CDN with $0 operational cost.
 - **🤖 Automated Daily Sync Bot:** Runs every night at 18:00 UTC (11:30 PM IST) to search for new daily episodes.
 - **📊 4,500+ Episode Database:** Pre-indexed dataset of all Taarak Mehta Ka Ooltah Chashmah episodes with zero missing data.
@@ -66,7 +66,7 @@ tmkoc-youtube-playlist-bot/
 ├── .github/workflows/
 │   └── daily_sync.yml          # GitHub Action scheduled daily cron
 ├── css/
-│   ├── variables.css           # DailyBrief design tokens & color themes
+│   ├── variables.css           # Design tokens & color themes
 │   ├── layout.css              # Responsive grid & container layouts
 │   └── style.css               # Main styling & Custom Player CSS
 ├── js/
