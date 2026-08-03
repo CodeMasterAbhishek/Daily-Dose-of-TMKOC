@@ -14,7 +14,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS -->
     <link rel="stylesheet" href="css/variables.css">
@@ -36,7 +36,8 @@
                 <button class="chip" data-category="recent">Recent (3001+)</button>
             </section>
 
-            <nav>
+            <nav style="display: flex; align-items: center; gap: 10px;">
+                <button id="fan-stats-btn" class="chip active" style="padding: 6px 14px; font-size: 12px; border-radius: 9999px; cursor: pointer;" title="View Fan Stats & Leaderboard">🏆 Fan Stats</button>
                 <button id="theme-toggle" class="btn-icon" aria-label="Toggle Dark Mode">
                     <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
@@ -88,6 +89,63 @@
             <div style="opacity: 0.6; font-size: 0.9rem;">Loading more episodes...</div>
         </section>
     </main>
+
+    <!-- Fan Dashboard & Social Share Modal -->
+    <div id="fan-modal-backdrop" class="tmkoc-modal-backdrop">
+        <div class="tmkoc-modal-dialog" style="max-width: 750px;">
+            <div class="tmkoc-modal-header">
+                <div class="tmkoc-modal-title-wrap">
+                    <span class="tmkoc-modal-badge" style="background: #6366f1; color: white;">🏆 DASHBOARD</span>
+                    <h3 class="tmkoc-modal-title">TMKOC Fan Stats & Superfan Leaderboard</h3>
+                </div>
+                <button class="tmkoc-modal-close" onclick="closeFanModal()">✕</button>
+            </div>
+            
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-height: 80vh;">
+                <!-- User Handle Box -->
+                <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-secondary); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <span style="font-size: 20px;">👤</span>
+                    <input type="text" id="user-handle-input" placeholder="Enter your Fan Handle (e.g. @Abhishek)" style="flex: 1; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; outline: none;">
+                    <button onclick="saveUserHandle()" class="chip active" style="padding: 8px 16px; border: none; cursor: pointer;">Save Handle</button>
+                </div>
+
+                <!-- Stats Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+                    <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Episodes Watched</div>
+                        <div id="stat-episodes-count" style="font-size: 26px; font-weight: 800; color: #6366f1; margin-top: 4px;">0</div>
+                    </div>
+                    <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Total Watch Time</div>
+                        <div id="stat-watch-hours" style="font-size: 26px; font-weight: 800; color: #10b981; margin-top: 4px;">0h 0m</div>
+                    </div>
+                    <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Fan Level Tier</div>
+                        <div id="stat-fan-level" style="font-size: 14px; font-weight: 800; color: #f59e0b; margin-top: 8px;">🥉 Gokuldham Resident</div>
+                    </div>
+                </div>
+
+                <!-- Social Share Card Box -->
+                <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(99, 102, 241, 0.3); padding: 18px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; font-weight: 800; color: #6366f1; letter-spacing: 0.5px;">📸 SOCIAL SHARE CARD</span>
+                        <button onclick="copyShareCardText()" class="chip active" style="padding: 6px 14px; font-size: 11px; cursor: pointer; border: none;">📋 Copy Share Card</button>
+                    </div>
+                    <div id="social-card-text" style="font-size: 13px; line-height: 1.5; color: var(--text-primary); font-weight: 600; background: var(--bg-primary); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        I've watched 0 episodes (0 Hours) of TMKOC on Daily Dose! 🥤 My Fan Level: Gokuldham Resident. Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/
+                    </div>
+                </div>
+
+                <!-- Community Leaderboard Section -->
+                <div>
+                    <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">👑 Global Superfan Leaderboard</h4>
+                    <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="container">

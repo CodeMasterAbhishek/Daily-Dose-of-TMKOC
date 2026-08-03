@@ -382,18 +382,50 @@ a:hover, a:visited, a:focus, a:active {
 }
 
 /* Modifiers for Cards */
-.card.read-article::after, .hero-slide.read-article::after {
-  content: '✓ Read';
+.card.read-article::after, .hero-slide.read-article::after, .card.watched-article::after {
+  content: '✓ Watched';
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: rgba(0,0,0,0.7);
+  background: rgba(16, 185, 129, 0.9);
   color: #fff;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
+  font-weight: 700;
   z-index: 10;
   backdrop-filter: blur(4px);
+}
+
+.card-duration-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+}
+
+.card-progress-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 6;
+}
+
+.card-progress-bar {
+  height: 100%;
+  background: #6366f1;
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 /* Animations */

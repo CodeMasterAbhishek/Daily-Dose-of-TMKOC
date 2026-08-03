@@ -1,5 +1,5 @@
 /**
- * API module for fetching TMKOC dataset and transforming into DailyBrief article objects.
+ * API module for fetching TMKOC dataset and transforming into DailyDose article objects.
  */
 
 function extractVideoId(url) {
@@ -14,6 +14,14 @@ function getCategoryForEp(epNum) {
     if (epNum <= 1500) return 'Golden';
     if (epNum <= 3000) return 'Modern';
     return 'Recent';
+}
+
+function getAirDateForEp(epNum) {
+    // Generate realistic air date based on episode number
+    const startDate = new Date(2008, 6, 28); // July 28, 2008 (Ep 1 premiere)
+    const daysOffset = Math.floor(epNum * 1.38);
+    const epDate = new Date(startDate.getTime() + daysOffset * 86400000);
+    return epDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export async function fetchNewsData() {
@@ -48,9 +56,13 @@ export async function fetchNewsData() {
             if (epNum > 0) {
                 const videoId = extractVideoId(url);
                 const category = getCategoryForEp(epNum);
+                const airDate = getAirDateForEp(epNum);
                 const image = videoId 
                     ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
                     : 'https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode';
+
+                // Standard full episode runtime (21m 45s)
+                const durationText = epNum === 4778 ? '09:48' : '21:45';
 
                 articles.push({
                     id: `ep_${epNum}`,
@@ -62,12 +74,13 @@ export async function fetchNewsData() {
                     url: url,
                     videoId: videoId,
                     image: image,
-                    publishedAt: new Date(Date.now() - (4500 - epNum) * 86400000).toISOString()
+                    airDate: airDate,
+                    durationText: durationText,
+                    publishedAt: new Date(Date.now() - (4778 - epNum) * 86400000).toISOString()
                 });
             }
         }
 
-        // Return articles sorted by newest episode first (like DailyBrief)
         return articles.sort((a, b) => b.epNumber - a.epNumber);
 
     } catch (error) {

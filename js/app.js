@@ -1,5 +1,5 @@
 import { fetchNewsData } from './api.js';
-import { renderArticles, renderHeroContainer, registerMasterArticles } from './ui.js';
+import { renderArticles, renderHeroContainer, registerMasterArticles, updateFanDashboard } from './ui.js';
 
 // Setup current year in footer
 const yearEl = document.getElementById('year');
@@ -52,6 +52,8 @@ let currentPage = 1;
 const paginationSection = document.getElementById('pagination');
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
+const fanStatsBtn = document.getElementById('fan-stats-btn');
+const fanModalBackdrop = document.getElementById('fan-modal-backdrop');
 
 // Main Initialization
 async function init() {
@@ -63,13 +65,8 @@ async function init() {
     try {
         allArticles = await fetchNewsData();
         
-        // Register all episodes for cross-category Next/Prev episode navigation
         registerMasterArticles(allArticles);
-
-        // Render Hero Slider
         renderHeroContainer(allArticles, 'hero-container');
-
-        // Render Cards Grid
         renderPage();
     } catch (error) {
         console.error("Initialization failed:", error);
@@ -79,13 +76,11 @@ async function init() {
 
 function renderPage(append = false) {
     const filteredArticles = allArticles.filter(article => {
-        // Category Filter
         let categoryMatch = true;
         if (currentCategory !== 'all') {
             categoryMatch = article.category.toLowerCase() === currentCategory.toLowerCase();
         }
 
-        // Search Query Filter
         let searchMatch = true;
         if (searchQuery) {
             const epMatch = article.epNumber.toString() === searchQuery || article.epNumber.toString().startsWith(searchQuery);
@@ -107,6 +102,14 @@ function renderPage(append = false) {
     } else {
         if (paginationSection) paginationSection.style.display = 'none';
     }
+}
+
+// Fan Stats Modal Event Listener
+if (fanStatsBtn) {
+    fanStatsBtn.addEventListener('click', () => {
+        updateFanDashboard();
+        if (fanModalBackdrop) fanModalBackdrop.style.display = 'flex';
+    });
 }
 
 // Search Form Listener
