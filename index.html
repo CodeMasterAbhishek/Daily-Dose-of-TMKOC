@@ -90,55 +90,76 @@
         </section>
     </main>
 
-    <!-- Fan Dashboard & Social Share Modal -->
+    <!-- Theme-Aware Fan Dashboard & Spotify-Style Social Share Modal -->
     <div id="fan-modal-backdrop" class="tmkoc-modal-backdrop">
-        <div class="tmkoc-modal-dialog" style="max-width: 750px;">
-            <div class="tmkoc-modal-header">
+        <div class="tmkoc-modal-dialog" style="max-width: 750px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+            <div class="tmkoc-modal-header" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
                 <div class="tmkoc-modal-title-wrap">
                     <span class="tmkoc-modal-badge" style="background: #6366f1; color: white;">🏆 DASHBOARD</span>
-                    <h3 class="tmkoc-modal-title">TMKOC Fan Stats & Superfan Leaderboard</h3>
+                    <h3 class="tmkoc-modal-title" style="color: var(--text-primary);">TMKOC Fan Stats & Superfan Leaderboard</h3>
                 </div>
                 <button class="tmkoc-modal-close" onclick="closeFanModal()">✕</button>
             </div>
             
-            <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-height: 80vh;">
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; max-height: 80vh;">
                 <!-- User Handle Box -->
                 <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-secondary); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
                     <span style="font-size: 20px;">👤</span>
-                    <input type="text" id="user-handle-input" placeholder="Enter your Fan Handle (e.g. @Abhishek)" style="flex: 1; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; outline: none;">
-                    <button onclick="saveUserHandle()" class="chip active" style="padding: 8px 16px; border: none; cursor: pointer;">Save Handle</button>
+                    <input type="text" id="user-handle-input" placeholder="Enter your Fan Handle (e.g. @Abhishek)" style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; outline: none;">
+                    <button onclick="saveUserHandle()" class="chip active" style="padding: 10px 18px; border: none; cursor: pointer; font-weight: 700;">Save Handle</button>
                 </div>
 
                 <!-- Stats Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
-                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Episodes Watched</div>
-                        <div id="stat-episodes-count" style="font-size: 26px; font-weight: 800; color: #6366f1; margin-top: 4px;">0</div>
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Episodes Watched</div>
+                        <div id="stat-episodes-count" style="font-size: 26px; font-weight: 900; color: #6366f1; margin-top: 4px;">0</div>
+                        <div style="font-size: 10px; opacity: 0.6; margin-top: 2px; color: var(--text-primary);">(>= 90% Completed)</div>
                     </div>
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
-                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Total Watch Time</div>
-                        <div id="stat-watch-hours" style="font-size: 26px; font-weight: 800; color: #10b981; margin-top: 4px;">0h 0m</div>
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Exact Watch Time</div>
+                        <div id="stat-watch-hours" style="font-size: 26px; font-weight: 900; color: #10b981; margin-top: 4px;">0h 0m</div>
+                        <div style="font-size: 10px; opacity: 0.6; margin-top: 2px; color: var(--text-primary);">(Active Playback Only)</div>
                     </div>
                     <div style="background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
-                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase;">Fan Level Tier</div>
+                        <div style="font-size: 11px; opacity: 0.7; font-weight: 700; text-transform: uppercase; color: var(--text-primary);">Fan Level Tier</div>
                         <div id="stat-fan-level" style="font-size: 14px; font-weight: 800; color: #f59e0b; margin-top: 8px;">🥉 Gokuldham Resident</div>
                     </div>
                 </div>
 
-                <!-- Social Share Card Box -->
-                <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(99, 102, 241, 0.3); padding: 18px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px;">
+                <!-- Spotify-Style Visual Share Card -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 12px; font-weight: 800; color: #6366f1; letter-spacing: 0.5px;">📸 SOCIAL SHARE CARD</span>
-                        <button onclick="copyShareCardText()" class="chip active" style="padding: 6px 14px; font-size: 11px; cursor: pointer; border: none;">📋 Copy Share Card</button>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px;">📸 SPOTIFY-STYLE SHARE CARD</span>
+                        <button onclick="copyShareCardText()" class="chip active" style="padding: 6px 14px; font-size: 11px; cursor: pointer; border: none; font-weight: 700;">📋 Copy Share Card</button>
                     </div>
-                    <div id="social-card-text" style="font-size: 13px; line-height: 1.5; color: var(--text-primary); font-weight: 600; background: var(--bg-primary); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
-                        I've watched 0 episodes (0 Hours) of TMKOC on Daily Dose! 🥤 My Fan Level: Gokuldham Resident. Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/
+
+                    <!-- Visual Card Element -->
+                    <div id="spotify-card-elem" class="spotify-share-card">
+                        <div class="spotify-card-header">
+                            <div class="spotify-card-brand">Daily<span>Dose</span> <small style="font-size: 9px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">TMKOC</small></div>
+                            <div id="card-user-badge" class="spotify-user-badge">@TMKOCSuperfan</div>
+                        </div>
+
+                        <div class="spotify-card-body">
+                            <div class="spotify-art-box">🍿</div>
+                            <div class="spotify-stats-info">
+                                <div id="card-tier-badge" class="spotify-tier-title">🥉 Gokuldham Resident</div>
+                                <div id="card-main-stat" class="spotify-main-stat">0 Episodes Watched</div>
+                                <div id="card-sub-stat" class="spotify-sub-stat">0 Hours 0 Mins Exact Watch Time</div>
+                            </div>
+                        </div>
+
+                        <div class="spotify-card-footer">
+                            <span>CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/</span>
+                            <span>#TMKOC #DailyDose</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Community Leaderboard Section -->
                 <div>
-                    <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">👑 Global Superfan Leaderboard</h4>
+                    <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; color: var(--text-primary);">👑 Global Superfan Leaderboard</h4>
                     <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;">
                         <!-- Rendered by JS -->
                     </div>

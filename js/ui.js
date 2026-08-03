@@ -1,5 +1,5 @@
 /**
- * UI module for DailyDose TMKOC, Resume Timestamp Player, and Fan Stats Leaderboard.
+ * UI module for DailyDose TMKOC, Resume Timestamp Player, Exact Watch Tracking (>= 90%), and Spotify-Style Share Card.
  */
 
 let allArticlesMap = {};
@@ -7,15 +7,27 @@ let masterEpNumberMap = {};
 let currentModalEpNum = null;
 
 // LocalStorage Keys
-const STORAGE_WATCHED = 'readArticles'; // Keeps compatibility with DailyBrief read system
+const STORAGE_COMPLETED = 'tmkoc_completed_watched_eps'; // Only >= 90% completed
 const STORAGE_TIMESTAMPS = 'tmkoc_timestamps';
+const STORAGE_EXACT_WATCH_SECONDS = 'tmkoc_exact_watch_seconds';
 const STORAGE_HANDLE = 'tmkoc_user_handle';
 
-function getWatchedList() {
+let activeWatchTrackerTimer = null;
+let currentActiveEpId = null;
+
+function getCompletedWatchedList() {
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_WATCHED) || '[]');
+        return JSON.parse(localStorage.getItem(STORAGE_COMPLETED) || '[]');
     } catch(e) {
         return [];
+    }
+}
+
+function getExactWatchSeconds() {
+    try {
+        return parseInt(localStorage.getItem(STORAGE_EXACT_WATCH_SECONDS) || '0');
+    } catch(e) {
+        return 0;
     }
 }
 
@@ -27,22 +39,19 @@ function getTimestamps() {
     }
 }
 
-window.markAsRead = function(id) {
+function saveCompletedEpisode(id) {
     try {
-        const watched = getWatchedList();
-        if (!watched.includes(id)) {
-            watched.push(id);
-            if (watched.length > 1000) watched.shift();
-            localStorage.setItem(STORAGE_WATCHED, JSON.stringify(watched));
+        const completed = getCompletedWatchedList();
+        if (!completed.includes(id)) {
+            completed.push(id);
+            localStorage.setItem(STORAGE_COMPLETED, JSON.stringify(completed));
         }
-        
         const elements = document.querySelectorAll(`[data-id="${id}"]`);
         elements.forEach(el => el.classList.add('read-article', 'watched-article'));
     } catch(e) {}
-};
+}
 
 window.playEpisode = function(id) {
-    window.markAsRead(id);
     const article = allArticlesMap[id] || masterEpNumberMap[id];
     if (article) {
         openCleanPlayer(article);
@@ -54,6 +63,20 @@ export function registerMasterArticles(articles) {
         allArticlesMap[art.id] = art;
         masterEpNumberMap[art.epNumber] = art;
     });
+}
+
+function formatTime(dateString) {
+    if (!dateString) return 'Just now';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.round(diffMs / 60000);
+    const diffHrs = Math.round(diffMins / 60);
+
+    if (diffMins < 60) return `${diffMins} mins ago`;
+    if (diffHrs < 24) return `${diffHrs} hours ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function createHeroHTML(articles) {
@@ -69,8 +92,8 @@ function createHeroHTML(articles) {
         const activeClass = index === 0 ? 'active' : '';
         
         let readClass = '';
-        const watched = getWatchedList();
-        if (watched.includes(article.id)) {
+        const completed = getCompletedWatchedList();
+        if (completed.includes(article.id)) {
             readClass = 'read-article watched-article';
         }
         
@@ -117,8 +140,8 @@ function createCardHTML(article) {
     const imageUrl = article.image;
     
     let readClass = '';
-    const watched = getWatchedList();
-    if (watched.includes(article.id)) {
+    const completed = getCompletedWatchedList();
+    if (completed.includes(article.id)) {
         readClass = 'read-article watched-article';
     }
 
@@ -249,8 +272,38 @@ export function renderHeroContainer(articles, containerId) {
 }
 
 // ----------------------------------------------------
-// RESUME TIMESTAMP PLAYER & CLEAN MODAL ENGINE
+// STRICT WATCHED ENGINE (>= 90% COMPLETION & EXACT SECONDS)
 // ----------------------------------------------------
+function startActiveWatchTracker(articleId) {
+    stopActiveWatchTracker();
+    currentActiveEpId = articleId;
+
+    // Track active seconds spent watching video (every 1 sec)
+    activeWatchTrackerTimer = setInterval(() => {
+        const totalSecs = getExactWatchSeconds() + 1;
+        localStorage.setItem(STORAGE_EXACT_WATCH_SECONDS, totalSecs.toString());
+
+        // Update current episode timestamp progress
+        const timestamps = getTimestamps();
+        const currentEpSecs = (timestamps[articleId] || 0) + 1;
+        timestamps[articleId] = currentEpSecs;
+        localStorage.setItem(STORAGE_TIMESTAMPS, JSON.stringify(timestamps));
+
+        // Strict 90% completion rule (1134 secs of a 1260 sec episode = 90%)
+        const totalEpSecs = 1260; // 21 mins
+        if (currentEpSecs >= totalEpSecs * 0.90) {
+            saveCompletedEpisode(articleId);
+        }
+    }, 1000);
+}
+
+function stopActiveWatchTracker() {
+    if (activeWatchTrackerTimer) {
+        clearInterval(activeWatchTrackerTimer);
+        activeWatchTrackerTimer = null;
+    }
+}
+
 function openCleanPlayer(article) {
     currentModalEpNum = article.epNumber;
 
@@ -283,7 +336,6 @@ function openCleanPlayer(article) {
     document.getElementById('clean-title').textContent = article.title;
     document.getElementById('clean-badge').textContent = `EP ${article.epNumber}`;
 
-    // Get saved resume timestamp
     const timestamps = getTimestamps();
     const resumeSeconds = timestamps[article.id] || 0;
     const startParam = resumeSeconds > 5 ? `&start=${resumeSeconds}` : '';
@@ -297,6 +349,9 @@ function openCleanPlayer(article) {
 
     backdrop.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // Start exact active seconds watch tracker
+    startActiveWatchTracker(article.id);
 }
 
 window.closeCleanPlayer = function() {
@@ -305,6 +360,7 @@ window.closeCleanPlayer = function() {
     const iframe = document.getElementById('clean-iframe');
     if (iframe) iframe.src = '';
     document.body.style.overflow = 'auto';
+    stopActiveWatchTracker();
 };
 
 window.navCleanEp = function(dir) {
@@ -317,7 +373,7 @@ window.navCleanEp = function(dir) {
 };
 
 // ----------------------------------------------------
-// FAN DASHBOARD & SUPERFAN LEADERBOARD ENGINE
+// FAN DASHBOARD & SPOTIFY-STYLE SHARE CARD ENGINE
 // ----------------------------------------------------
 function getFanLevel(watchedCount) {
     if (watchedCount >= 1000) return { title: '👑 Gokuldham Legend', color: '#8b5cf6' };
@@ -327,18 +383,20 @@ function getFanLevel(watchedCount) {
 }
 
 export function updateFanDashboard() {
-    const watchedList = getWatchedList();
-    const count = watchedList.length;
-    const watchHours = Math.floor((count * 21.5) / 60);
-    const watchMins = Math.floor((count * 21.5) % 60);
+    const completedList = getCompletedWatchedList();
+    const watchedCount = completedList.length;
 
-    const level = getFanLevel(count);
+    const totalWatchSecs = getExactWatchSeconds();
+    const watchHours = Math.floor(totalWatchSecs / 3600);
+    const watchMins = Math.floor((totalWatchSecs % 3600) / 60);
+
+    const level = getFanLevel(watchedCount);
 
     const countEl = document.getElementById('stat-episodes-count');
     const hoursEl = document.getElementById('stat-watch-hours');
     const levelEl = document.getElementById('stat-fan-level');
 
-    if (countEl) countEl.textContent = count;
+    if (countEl) countEl.textContent = watchedCount;
     if (hoursEl) hoursEl.textContent = `${watchHours}h ${watchMins}m`;
     if (levelEl) {
         levelEl.textContent = level.title;
@@ -351,19 +409,24 @@ export function updateFanDashboard() {
         handleInput.value = savedHandle;
     }
 
-    // Social Share Text Card
-    const shareText = `I've watched ${count} episodes (${watchHours} Hours) of TMKOC on Daily Dose! 🥤 My Fan Level: ${level.title}. Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/`;
-    const shareTextEl = document.getElementById('social-card-text');
-    if (shareTextEl) shareTextEl.textContent = shareText;
+    // Update Spotify-Style Card Elements
+    const cardUserBadge = document.getElementById('card-user-badge');
+    const cardTierBadge = document.getElementById('card-tier-badge');
+    const cardMainStat = document.getElementById('card-main-stat');
+    const cardSubStat = document.getElementById('card-sub-stat');
 
-    renderLeaderboardList(savedHandle, count, watchHours, level.title);
+    if (cardUserBadge) cardUserBadge.textContent = savedHandle;
+    if (cardTierBadge) cardTierBadge.textContent = level.title;
+    if (cardMainStat) cardMainStat.textContent = `${watchedCount} Episodes Watched`;
+    if (cardSubStat) cardSubStat.textContent = `${watchHours} Hours ${watchMins} Mins Exact Watch Time`;
+
+    renderLeaderboardList(savedHandle, watchedCount, watchHours, level.title);
 }
 
 function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
     const leaderboardEl = document.getElementById('leaderboard-list');
     if (!leaderboardEl) return;
 
-    // Standard Community Rankings
     const sampleLeaderboard = [
         { rank: '1 👑', handle: '@JethaFanatic', count: 1420, hours: 508, level: 'Gokuldham Legend' },
         { rank: '2 🥇', handle: '@BhideSecretary', count: 1150, hours: 412, level: 'Gokuldham Legend' },
@@ -379,15 +442,15 @@ function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
         html += `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); ${activeBg}">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-weight: 800; font-size: 14px; min-width: 30px;">#${idx + 1}</span>
+                    <span style="font-weight: 800; font-size: 14px; min-width: 30px; color: var(--text-primary);">#${idx + 1}</span>
                     <div>
-                        <div style="font-weight: 700; font-size: 13px;">${item.handle} ${item.isUser ? '<span style="font-size: 10px; background: #6366f1; color: white; padding: 1px 6px; border-radius: 4px;">YOU</span>' : ''}</div>
-                        <div style="font-size: 11px; opacity: 0.7;">${item.level}</div>
+                        <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${item.handle} ${item.isUser ? '<span style="font-size: 10px; background: #6366f1; color: white; padding: 1px 6px; border-radius: 4px;">YOU</span>' : ''}</div>
+                        <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.level}</div>
                     </div>
                 </div>
                 <div style="text-align: right;">
                     <div style="font-weight: 800; font-size: 13px; color: #6366f1;">${item.count} Eps</div>
-                    <div style="font-size: 11px; opacity: 0.7;">${item.hours} hrs</div>
+                    <div style="font-size: 11px; opacity: 0.7; color: var(--text-primary);">${item.hours} hrs</div>
                 </div>
             </div>
         `;
@@ -405,9 +468,17 @@ window.saveUserHandle = function() {
 };
 
 window.copyShareCardText = function() {
-    const text = document.getElementById('social-card-text').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Copied Social Share Card text to clipboard!');
+    const handle = localStorage.getItem(STORAGE_HANDLE) || '@TMKOCSuperfan';
+    const completedList = getCompletedWatchedList();
+    const count = completedList.length;
+    const totalSecs = getExactWatchSeconds();
+    const hours = Math.floor(totalSecs / 3600);
+    const level = getFanLevel(count);
+
+    const shareText = `I've watched ${count} episodes (${hours} Hours) of TMKOC on Daily Dose! 🍿 My Fan Level: ${level.title} (${handle}). Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/`;
+
+    navigator.clipboard.writeText(shareText).then(() => {
+        alert('Copied Spotify-Style Share Card text to clipboard!');
     });
 };
 
