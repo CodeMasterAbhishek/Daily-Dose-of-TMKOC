@@ -65,20 +65,6 @@ export function registerMasterArticles(articles) {
     });
 }
 
-function formatTime(dateString) {
-    if (!dateString) return 'Just now';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.round(diffMs / 60000);
-    const diffHrs = Math.round(diffMins / 60);
-
-    if (diffMins < 60) return `${diffMins} mins ago`;
-    if (diffHrs < 24) return `${diffHrs} hours ago`;
-    
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
 function createHeroHTML(articles) {
     if (!articles || articles.length === 0) return '';
     
@@ -153,7 +139,7 @@ function createCardHTML(article) {
         <article class="card ${readClass}" data-id="${article.id}" data-category="${article.category.toLowerCase()}">
             <a href="javascript:void(0)" class="card-img-wrap" onclick="playEpisode('${article.id}')">
                 <img src="${imageUrl}" alt="${article.title}" loading="lazy" class="card-img" onerror="this.src='https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode'">
-                <span class="card-duration-badge">⏱️ ${article.durationText || '21:45'}</span>
+                <span class="card-duration-badge">${article.durationText || '21:45'}</span>
                 ${progressPercent > 0 ? `<div class="card-progress-container"><div class="card-progress-bar" style="width: ${progressPercent}%;"></div></div>` : ''}
             </a>
             <div class="card-content">
@@ -278,18 +264,15 @@ function startActiveWatchTracker(articleId) {
     stopActiveWatchTracker();
     currentActiveEpId = articleId;
 
-    // Track active seconds spent watching video (every 1 sec)
     activeWatchTrackerTimer = setInterval(() => {
         const totalSecs = getExactWatchSeconds() + 1;
         localStorage.setItem(STORAGE_EXACT_WATCH_SECONDS, totalSecs.toString());
 
-        // Update current episode timestamp progress
         const timestamps = getTimestamps();
         const currentEpSecs = (timestamps[articleId] || 0) + 1;
         timestamps[articleId] = currentEpSecs;
         localStorage.setItem(STORAGE_TIMESTAMPS, JSON.stringify(timestamps));
 
-        // Strict 90% completion rule (1134 secs of a 1260 sec episode = 90%)
         const totalEpSecs = 1260; // 21 mins
         if (currentEpSecs >= totalEpSecs * 0.90) {
             saveCompletedEpisode(articleId);
@@ -350,7 +333,6 @@ function openCleanPlayer(article) {
     backdrop.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Start exact active seconds watch tracker
     startActiveWatchTracker(article.id);
 }
 
@@ -376,10 +358,10 @@ window.navCleanEp = function(dir) {
 // FAN DASHBOARD & SPOTIFY-STYLE SHARE CARD ENGINE
 // ----------------------------------------------------
 function getFanLevel(watchedCount) {
-    if (watchedCount >= 1000) return { title: '👑 Gokuldham Legend', color: '#8b5cf6' };
-    if (watchedCount >= 301) return { title: '🥇 Bapuji\'s Favorite', color: '#f59e0b' };
-    if (watchedCount >= 51) return { title: '🥈 Soda Shop Regular', color: '#3b82f6' };
-    return { title: '🥉 Gokuldham Resident', color: '#10b981' };
+    if (watchedCount >= 1000) return { title: 'Gokuldham Legend', color: '#8b5cf6' };
+    if (watchedCount >= 301) return { title: 'Bapuji\'s Favorite', color: '#f59e0b' };
+    if (watchedCount >= 51) return { title: 'Soda Shop Regular', color: '#3b82f6' };
+    return { title: 'Gokuldham Resident', color: '#10b981' };
 }
 
 export function updateFanDashboard() {
@@ -409,7 +391,6 @@ export function updateFanDashboard() {
         handleInput.value = savedHandle;
     }
 
-    // Update Spotify-Style Card Elements
     const cardUserBadge = document.getElementById('card-user-badge');
     const cardTierBadge = document.getElementById('card-tier-badge');
     const cardMainStat = document.getElementById('card-main-stat');
@@ -428,10 +409,10 @@ function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
     if (!leaderboardEl) return;
 
     const sampleLeaderboard = [
-        { rank: '1 👑', handle: '@JethaFanatic', count: 1420, hours: 508, level: 'Gokuldham Legend' },
-        { rank: '2 🥇', handle: '@BhideSecretary', count: 1150, hours: 412, level: 'Gokuldham Legend' },
-        { rank: '3 🥈', handle: '@SodaShopGang', count: 890, hours: 318, level: 'Bapuji\'s Favorite' },
-        { rank: '4 🥉', handle: userHandle || '@You', count: userCount, hours: userHours, level: userLevel, isUser: true }
+        { rank: '1', handle: '@JethaFanatic', count: 1420, hours: 508, level: 'Gokuldham Legend' },
+        { rank: '2', handle: '@BhideSecretary', count: 1150, hours: 412, level: 'Gokuldham Legend' },
+        { rank: '3', handle: '@SodaShopGang', count: 890, hours: 318, level: 'Bapuji\'s Favorite' },
+        { rank: '4', handle: userHandle || '@You', count: userCount, hours: userHours, level: userLevel, isUser: true }
     ];
 
     sampleLeaderboard.sort((a, b) => b.count - a.count);
@@ -475,7 +456,7 @@ window.copyShareCardText = function() {
     const hours = Math.floor(totalSecs / 3600);
     const level = getFanLevel(count);
 
-    const shareText = `I've watched ${count} episodes (${hours} Hours) of TMKOC on Daily Dose! 🍿 My Fan Level: ${level.title} (${handle}). Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/`;
+    const shareText = `I've watched ${count} episodes (${hours} Hours) of TMKOC on Daily Dose! My Fan Level: ${level.title} (${handle}). Check your level at CodeMasterAbhishek.github.io/tmkoc-youtube-playlist-bot/`;
 
     navigator.clipboard.writeText(shareText).then(() => {
         alert('Copied Spotify-Style Share Card text to clipboard!');
