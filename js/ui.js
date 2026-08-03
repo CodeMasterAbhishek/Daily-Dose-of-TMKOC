@@ -1,8 +1,24 @@
 /**
- * UI module for rendering DailyBrief DOM elements & Theatre Player.
+ * UI module for rendering DailyBrief DOM elements & Custom Video Player Engine.
  */
 
 let allArticlesMap = {};
+let ytPlayer = null;
+let isYtApiReady = false;
+let currentModalEpNum = null;
+let progressInterval = null;
+
+// Load YouTube IFrame API
+if (!window.YT) {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+    isYtApiReady = true;
+};
 
 window.markAsRead = function(id) {
     try {
@@ -22,7 +38,7 @@ window.playEpisode = function(id) {
     window.markAsRead(id);
     const article = allArticlesMap[id];
     if (article) {
-        openModalPlayer(article);
+        openCustomPlayer(article);
     }
 };
 
@@ -40,7 +56,14 @@ function formatTime(dateString) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Generate HTML for the Featured Hero Slider (DailyBrief Hero)
+function formatDuration(seconds) {
+    if (!seconds || isNaN(seconds)) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// Generate HTML for the Featured Hero Slider
 function createHeroHTML(articles) {
     if (!articles || articles.length === 0) return '';
     
@@ -130,7 +153,6 @@ function createCardHTML(article) {
     `;
 }
 
-// Render Articles Engine
 export function renderArticles(articles, containerId, append = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -155,7 +177,6 @@ export function renderArticles(articles, containerId, append = false) {
     container.appendChild(fragment);
 }
 
-// Setup Hero Slider Behavior
 let heroAutoTimer = null;
 
 function setupHeroSlider() {
@@ -228,77 +249,192 @@ export function renderHeroContainer(articles, containerId) {
         return;
     }
 
-    // Take top 4 featured episodes for hero slider
     const featured = articles.slice(0, 4);
     container.innerHTML = createHeroHTML(featured);
     setupHeroSlider();
 }
 
-// Modal Theatre Player Controls
-let currentModalEpNum = null;
-
-function openModalPlayer(article) {
+// ----------------------------------------------------
+// CUSTOM VIDEO PLAYER ENGINE
+// ----------------------------------------------------
+function openCustomPlayer(article) {
     currentModalEpNum = article.epNumber;
-    
-    let modal = document.getElementById('tmkoc-player-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'tmkoc-player-modal';
-        modal.className = 'tmkoc-modal-backdrop';
-        modal.innerHTML = `
-            <div class="tmkoc-modal-box">
-                <div class="tmkoc-modal-top">
-                    <h3 id="tmkoc-modal-title"></h3>
-                    <button class="tmkoc-modal-close" onclick="closeModalPlayer()">✕</button>
+
+    let backdrop = document.getElementById('custom-player-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'custom-player-backdrop';
+        backdrop.className = 'custom-player-backdrop';
+        backdrop.innerHTML = `
+            <div class="custom-player-dialog">
+                <div class="custom-player-header">
+                    <div class="custom-player-title-wrap">
+                        <span id="custom-badge" class="custom-player-badge">EP 1</span>
+                        <h3 id="custom-title" class="custom-player-title">Episode Title</h3>
+                    </div>
+                    <button class="custom-player-close" onclick="closeCustomPlayer()">✕</button>
                 </div>
-                <div class="tmkoc-video-frame">
-                    <iframe id="tmkoc-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <div class="custom-video-viewport">
+                    <div id="yt-player-target"></div>
                 </div>
-                <div class="tmkoc-modal-bottom">
-                    <button class="tmkoc-nav-btn" onclick="navModalEp(-1)">◀ Previous Ep</button>
-                    <span id="tmkoc-modal-badge" class="tmkoc-ep-badge"></span>
-                    <button class="tmkoc-nav-btn" onclick="navModalEp(1)">Next Ep ▶</button>
+                <div class="custom-controls-bar">
+                    <div class="custom-progress-row">
+                        <input type="range" id="custom-seek-bar" class="custom-seek-bar" value="0" min="0" max="100" step="0.1">
+                        <span id="custom-time-display" class="custom-time-display">00:00 / 00:00</span>
+                    </div>
+                    <div class="custom-buttons-row">
+                        <div class="custom-controls-left">
+                            <button id="custom-play-btn" class="ctrl-btn ctrl-btn-primary" onclick="togglePlayPause()">▶ Play</button>
+                            <button class="ctrl-btn" onclick="navCustomEp(-1)">◀ Prev Ep</button>
+                            <button class="ctrl-btn" onclick="navCustomEp(1)">Next Ep ▶</button>
+                        </div>
+                        <div class="custom-controls-right">
+                            <select id="custom-speed-select" class="speed-select" onchange="changeSpeed(this.value)">
+                                <option value="0.75">0.75x</option>
+                                <option value="1" selected>1.0x (Normal)</option>
+                                <option value="1.25">1.25x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2.0x</option>
+                            </select>
+                            <button class="ctrl-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(backdrop);
+
+        // Seek Bar Drag Listener
+        const seekBar = document.getElementById('custom-seek-bar');
+        seekBar.addEventListener('input', () => {
+            if (ytPlayer && ytPlayer.getDuration) {
+                const dur = ytPlayer.getDuration();
+                const seekTo = (seekBar.value / 100) * dur;
+                ytPlayer.seekTo(seekTo, true);
+            }
+        });
     }
 
-    document.getElementById('tmkoc-modal-title').textContent = article.title;
-    document.getElementById('tmkoc-modal-badge').textContent = `Episode ${article.epNumber}`;
+    document.getElementById('custom-title').textContent = article.title;
+    document.getElementById('custom-badge').textContent = `EP ${article.epNumber}`;
 
-    const iframe = document.getElementById('tmkoc-iframe');
-    if (article.videoId) {
-        iframe.src = `https://www.youtube.com/embed/${article.videoId}?autoplay=1&rel=0`;
-    } else {
-        iframe.src = `https://www.youtube.com/embed?listType=search&list=Taarak+Mehta+Ka+Ooltah+Chashmah+Episode+${article.epNumber}`;
-    }
-
-    modal.style.display = 'flex';
+    backdrop.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // Initialize or load video into YouTube Player
+    if (window.YT && window.YT.Player) {
+        if (!ytPlayer) {
+            ytPlayer = new YT.Player('yt-player-target', {
+                videoId: article.videoId,
+                playerVars: {
+                    autoplay: 1,
+                    controls: 0, // Hide default YT controls to use our custom player controls!
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    onReady: onPlayerReady,
+                    onStateChange: onPlayerStateChange
+                }
+            });
+        } else {
+            ytPlayer.loadVideoById(article.videoId);
+        }
+    } else {
+        // Fallback if YT API not loaded yet
+        document.getElementById('yt-player-target').innerHTML = `
+            <iframe src="https://www.youtube.com/embed/${article.videoId}?autoplay=1&rel=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="width:100%;height:100%;"></iframe>
+        `;
+    }
 }
 
-window.closeModalPlayer = function() {
-    const modal = document.getElementById('tmkoc-player-modal');
-    if (modal) {
-        modal.style.display = 'none';
-        const iframe = document.getElementById('tmkoc-iframe');
-        if (iframe) iframe.src = '';
+function onPlayerReady(event) {
+    event.target.playVideo();
+    startProgressTimer();
+}
+
+function onPlayerStateChange(event) {
+    const playBtn = document.getElementById('custom-play-btn');
+    if (!playBtn) return;
+
+    if (event.data === YT.PlayerState.PLAYING) {
+        playBtn.innerHTML = '❚❚ Pause';
+        startProgressTimer();
+    } else {
+        playBtn.innerHTML = '▶ Play';
+        stopProgressTimer();
     }
+}
+
+function startProgressTimer() {
+    stopProgressTimer();
+    progressInterval = setInterval(() => {
+        if (ytPlayer && ytPlayer.getCurrentTime && ytPlayer.getDuration) {
+            const current = ytPlayer.getCurrentTime();
+            const dur = ytPlayer.getDuration();
+            const timeDisplay = document.getElementById('custom-time-display');
+            const seekBar = document.getElementById('custom-seek-bar');
+
+            if (timeDisplay) {
+                timeDisplay.textContent = `${formatDuration(current)} / ${formatDuration(dur)}`;
+            }
+            if (seekBar && dur > 0) {
+                seekBar.value = (current / dur) * 100;
+            }
+        }
+    }, 500);
+}
+
+function stopProgressTimer() {
+    if (progressInterval) clearInterval(progressInterval);
+}
+
+window.togglePlayPause = function() {
+    if (!ytPlayer) return;
+    const state = ytPlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+    } else {
+        ytPlayer.playVideo();
+    }
+};
+
+window.changeSpeed = function(val) {
+    if (ytPlayer && ytPlayer.setPlaybackRate) {
+        ytPlayer.setPlaybackRate(parseFloat(val));
+    }
+};
+
+window.toggleFullscreen = function() {
+    const frame = document.querySelector('.custom-video-viewport');
+    if (!frame) return;
+
+    if (!document.fullscreenElement) {
+        if (frame.requestFullscreen) frame.requestFullscreen();
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+    }
+};
+
+window.closeCustomPlayer = function() {
+    const backdrop = document.getElementById('custom-player-backdrop');
+    if (backdrop) backdrop.style.display = 'none';
+    if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+    stopProgressTimer();
     document.body.style.overflow = 'auto';
 };
 
-window.navModalEp = function(dir) {
+window.navCustomEp = function(dir) {
     if (!currentModalEpNum) return;
     const targetEp = currentModalEpNum + dir;
     const targetArticle = Object.values(allArticlesMap).find(a => a.epNumber === targetEp);
     if (targetArticle) {
-        openModalPlayer(targetArticle);
+        openCustomPlayer(targetArticle);
     }
 };
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        window.closeModalPlayer();
+        window.closeCustomPlayer();
     }
 });
