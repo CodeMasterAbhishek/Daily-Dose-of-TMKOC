@@ -36,23 +36,23 @@ def extract_description_text(vid_dict: dict) -> str:
 
 def is_single_episode(title: str, description: str, channel: str, ep_num: int) -> bool:
     """
-    Evaluates whether a YouTube video corresponds to a SINGLE episode matching `ep_num`.
+    Evaluates whether a YouTube video corresponds strictly to a SINGLE episode matching `ep_num`.
     """
     title_lower = title.lower()
     desc_lower = description.lower()
     channel_lower = channel.lower()
     combined_text = title_lower + " " + desc_lower
 
-    if re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d+)\s*(?:to|से)\s*(\d+)\b', combined_text):
-        m = re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d+)\s*(?:to|से)\s*(\d+)\b', combined_text)
+    # STRICTLY REJECT MULTI-EPISODE RANGES (e.g., Ep 4499-4504 or 100 to 105)
+    if re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d{2,4})\s*(?:-|–|—|to|से)\s*(\d{2,4})\b', combined_text):
+        m = re.search(r'\b(?:ep|episode|episodes|ep\.|एपिसोड)?\s*(\d{2,4})\s*(?:-|–|—|to|से)\s*(\d{2,4})\b', combined_text)
         if m and int(m.group(1)) != int(m.group(2)):
             n1, n2 = int(m.group(1)), int(m.group(2))
-            if abs(n2 - n1) > 1:
+            if abs(n2 - n1) >= 2:
                 return False
 
-    if 'full movie' in title_lower or 'compilation' in title_lower or 'best of' in title_lower:
-        if re.search(r'\b(\d+)\s*(?:to|-|–|—)\s*(\d+)\b', title_lower):
-            return False
+    if any(k in combined_text for k in ['compilation', 'best of', 'full movie', 'mega episode']):
+        return False
 
     ep_patterns = [
         rf'(?:full\s+)?(?:ep|episode|ep\.|episodes|ep\s*#|एपिसोड)\s*[-:]?\s*0*{ep_num}\b',
