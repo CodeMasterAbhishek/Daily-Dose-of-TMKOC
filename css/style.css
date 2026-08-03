@@ -691,4 +691,64 @@ a:hover, a:visited, a:focus, a:active {
   color: #a5b4fc;
 }
 
+/* Premium Header Search Bar Component */
+.nav-search-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 4px 6px 4px 12px;
+  width: 210px;
+  height: 36px;
+  transition: all 0.2s ease;
+}
+
+.nav-search-wrap:focus-within {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.nav-search-wrap .search-icon {
+  color: var(--text-primary);
+  opacity: 0.5;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.nav-search-wrap input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+}
+
+.nav-search-wrap input::placeholder {
+  color: var(--text-primary);
+  opacity: 0.45;
+}
+
+.nav-search-wrap .search-submit-btn {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.nav-search-wrap .search-submit-btn:hover {
+  transform: scale(1.08);
+  opacity: 0.9;
+}
+
 
