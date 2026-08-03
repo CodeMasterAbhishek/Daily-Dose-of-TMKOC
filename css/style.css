@@ -698,15 +698,16 @@ a:hover, a:visited, a:focus, a:active {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 9999px;
-  padding: 0 14px;
-  width: 220px;
+  padding: 0 12px;
+  width: 200px;
   height: 36px;
-  transition: all 0.2s ease;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-search-wrap:focus-within {
+  width: 270px;
   border-color: var(--text-primary);
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .nav-search-wrap .search-icon {
@@ -729,6 +730,24 @@ a:hover, a:visited, a:focus, a:active {
 .nav-search-wrap input::placeholder {
   color: var(--text-primary);
   opacity: 0.45;
+}
+
+.search-kbd {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  opacity: 0.5;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px 5px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.nav-search-wrap:focus-within .search-kbd {
+  display: none;
 }
 
 

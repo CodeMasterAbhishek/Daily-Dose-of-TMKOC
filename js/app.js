@@ -149,6 +149,14 @@ if (searchInput) {
         currentPage = 1;
         renderPage(false);
     });
+
+    // Keyboard shortcut '/' to focus search input
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
 }
 
 // Category Chips Handler
