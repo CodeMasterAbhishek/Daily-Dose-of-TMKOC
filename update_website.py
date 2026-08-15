@@ -28,7 +28,23 @@ STATE_FILE = "state.json"
 CSV_FILE = "episodes.csv"
 
 
-def is_single_episode(title: str, description: str, channel: str, ep_num: int) -> bool:
+def get_minutes(duration_str: str) -> int:
+    parts = duration_str.split(':')
+    if len(parts) == 3: # H:M:S
+        return int(parts[0]) * 60 + int(parts[1])
+    elif len(parts) == 2: # M:S
+        return int(parts[0])
+    return 0
+
+def is_promo(title: str, duration_str: str) -> bool:
+    title_lower = title.lower()
+    if any(k in title_lower for k in ['teaser', 'promo', 'precap', 'coming up next']):
+        return True
+    if get_minutes(duration_str) < 15:
+        return True
+    return False
+
+def is_single_episode(title: str, description: str, channel: str, ep_num: int, require_full: bool = False) -> bool:
     # Strict channel filter
     valid_channels = ['sony sab', 'sony pal', 'taarak mehta ka ooltah chashmah', 'taarak mehta ka ooltah chashmah episodes']
     if channel.lower() not in valid_channels:
@@ -48,6 +64,10 @@ def is_single_episode(title: str, description: str, channel: str, ep_num: int) -
 
     if any(k in combined_text for k in ['compilation', 'best of', 'full movie', 'mega episode']):
         return False
+        
+    if require_full:
+        if any(k in combined_text for k in ['teaser', 'promo', 'precap', 'coming up next']):
+            return False
 
     # Check if a different episode number is explicitly in title
     ep_extract = re.search(r'(?:ep|episode|ep\.|एपिसोड)\s*#?\s*(\d+)', title_lower)
@@ -117,7 +137,7 @@ def parse_relative_date(time_text: str) -> str:
     return target_date.strftime("%d %b %Y")
 
 
-def find_next_episode(ep_num: int):
+def find_episode(ep_num: int, require_full: bool = False):
     search_queries = [
         f"Ep {ep_num} Taarak Mehta Ka Ooltah Chashmah",
         f"Taarak Mehta Ka Ooltah Chashmah Episode {ep_num}",
@@ -135,11 +155,15 @@ def find_next_episode(ep_num: int):
                 channel = vid.get('ownerText', {}).get('runs', [{}])[0].get('text', '')
                 description = extract_description_text(vid)
 
-                if vid_id and is_single_episode(title, description, channel, ep_num):
+                if vid_id and is_single_episode(title, description, channel, ep_num, require_full):
                     url = f"https://www.youtube.com/watch?v={vid_id}"
                     time_text = vid.get('publishedTimeText', {}).get('simpleText', '')
                     date_str = parse_relative_date(time_text)
                     duration_str = vid.get('lengthText', {}).get('simpleText', '21:45')
+                    
+                    if require_full and is_promo(title, duration_str):
+                        continue
+                        
                     return (vid_id, title, url, date_str, duration_str)
         except Exception:
             continue
@@ -162,12 +186,42 @@ def main():
     last_ep = state.get("last_episode", 4778)
     print(f"Checking for new TMKOC episodes after Ep {last_ep}...")
 
+    rows = []
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+
+    # 1. Upgrade Promos
+    upgraded_count = 0
+    for i, row in enumerate(rows):
+        if len(row) >= 6:
+            ep_num = int(row[0])
+            title = row[1]
+            duration_str = row[5]
+            if is_promo(title, duration_str):
+                print(f"Checking for full episode upgrade for Ep {ep_num} (Currently: {duration_str})...")
+                result = find_episode(ep_num, require_full=True)
+                if result:
+                    vid_id, new_title, new_url, new_date_str, new_duration_str = result
+                    print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
+                    rows[i] = [ep_num, new_title, new_url, "Found", new_date_str if new_date_str else row[4], new_duration_str]
+                    upgraded_count += 1
+                else:
+                    print(f"  [WAITING] Full episode not yet available for Ep {ep_num}.")
+
+    if upgraded_count > 0:
+        with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerows(rows)
+            
+    # 2. Find new episodes
     episodes_added = 0
     next_ep = last_ep + 1
 
     while True:
         print(f"Searching for Episode {next_ep}...")
-        result = find_next_episode(next_ep)
+        result = find_episode(next_ep)
 
         if result:
             vid_id, title, url, date_str, duration_str = result
@@ -196,7 +250,7 @@ def main():
         json.dump(state, f, indent=2)
 
     print("\n=======================================================")
-    print(f" Website Update Complete! {episodes_added} new episode(s) added.")
+    print(f" Website Update Complete! {episodes_added} new episode(s) added, {upgraded_count} promo(s) upgraded.")
     print(f" Latest Episode in DB: Ep {last_ep}")
     print("=======================================================\n")
 
