@@ -176,6 +176,71 @@ def find_episode(ep_num: int, require_full: bool = False):
             break
 
     return best_match
+import re
+
+def reverse_global_scan(rows):
+    print("Running Reverse Global Scan for recent Sony uploads...")
+    upgraded_count = 0
+    try:
+        videos = scrapetube.get_search("Taarak Mehta Ka Ooltah Chashmah Full Episode", sort_by="upload_date", limit=300)
+        
+        ep_map = {int(r[0]): (i, r) for i, r in enumerate(rows) if len(r) >= 6}
+        valid_channels = ['sony sab', 'sony pal', 'taarak mehta ka ooltah chashmah', 'taarak mehta ka ooltah chashmah episodes']
+        
+        for vid in videos:
+            channel = vid.get('ownerText', {}).get('runs', [{}])[0].get('text', '').lower()
+            if channel not in valid_channels:
+                continue
+                
+            title_runs = vid.get('title', {}).get('runs', [])
+            title = "".join([r.get('text', '') for r in title_runs]).strip()
+            description = extract_description_text(vid)
+            
+            # Extract episode number from title or description
+            pattern = r"(?i)(?:ep|episode)\s*[-:]?\s*(\d+)"
+            match = re.search(pattern, title)
+            if not match:
+                match = re.search(pattern, description)
+                
+            if match:
+                ep_num = int(match.group(1))
+                if ep_num in ep_map:
+                    row_idx, row = ep_map[ep_num]
+                    
+                    vid_id = vid.get('videoId', '')
+                    if not vid_id:
+                        continue
+                        
+                    old_vid_id = row[2].split('v=')[-1]
+                    if vid_id == old_vid_id:
+                        continue # Already have this exact video
+                        
+                    duration_str = vid.get('lengthText', {}).get('simpleText', '0:00')
+                    new_mins = get_minutes(duration_str)
+                    
+                    if new_mins < 15:
+                        continue # Skip promos or shorts
+                        
+                    old_mins = get_minutes(row[5])
+                    
+                    # Accept it if it's a full episode. Sony often replaces old geo-blocked uploads
+                    # with slightly shorter public uploads.
+                    if new_mins > old_mins + 1 or new_mins >= 18:
+                        url = f"https://www.youtube.com/watch?v={vid_id}"
+                        time_text = vid.get('publishedTimeText', {}).get('simpleText', '')
+                        date_str = parse_relative_date(time_text)
+                        
+                        print(f"  [REVERSE UPGRADE] Ep {ep_num}: {title} ({duration_str})")
+                        rows[row_idx] = [ep_num, title, url, "Found", date_str if date_str else row[4], duration_str]
+                        upgraded_count += 1
+                        
+                        # Update map so we don't downgrade it if an older duplicate is further down the results
+                        ep_map[ep_num] = (row_idx, rows[row_idx])
+                        
+    except Exception as e:
+        print(f"Reverse global scan error: {e}")
+        
+    return upgraded_count
 
 
 def main():
@@ -199,9 +264,11 @@ def main():
             reader = csv.reader(f)
             rows = list(reader)
 
-    # 1. Upgrade Promos and scan for longer versions across the ENTIRE database
-    upgraded_count = 0
+    # 1. Reverse Global Scan (Catch all re-uploads instantly via YouTube Search upload_date sort)
+    upgraded_count = reverse_global_scan(rows)
     
+    # 2. Check for missing episode upgrades (old promos that might have been uploaded later but missed)
+    # We still do a quick check for exceptionally short promos in case the reverse scan missed them
     for i, row in enumerate(rows):
         if len(row) >= 6:
             ep_num = int(row[0])
@@ -209,13 +276,7 @@ def main():
             duration_str = row[5]
             current_mins = get_minutes(duration_str)
             
-            is_recent = (i >= len(rows) - 20)
-            
-            # Check for upgrades if:
-            # 1. It is a known promo (has "Teaser/Promo" in title)
-            # 2. It is in the last 20 episodes and under 25 mins (to catch 16m -> 21m upgrades)
-            # 3. It is older, but exceptionally short (under 16 mins) which means it's likely an old promo
-            if is_promo(title) or (is_recent and current_mins < 25) or (not is_recent and current_mins < 16):
+            if is_promo(title) or current_mins < 16:
                 print(f"Checking for better version for Ep {ep_num} (Currently: {duration_str})...")
                 result = find_episode(ep_num, require_full=False)
                 if result:
@@ -230,13 +291,6 @@ def main():
                         should_upgrade = True
                     elif new_mins > current_mins + 1:
                         should_upgrade = True
-                    elif is_recent and new_mins >= 18 and new_mins < current_mins + 1:
-                        # For recent episodes, if we found a new full episode (>18 mins),
-                        # accept it even if it's slightly shorter. Sony often replaces geo-blocked
-                        # early uploads with slightly shorter public uploads later.
-                        # Only upgrade if the video ID is actually different!
-                        if vid_id != row[2].split('v=')[-1]:
-                            should_upgrade = True
                         
                     if should_upgrade:
                         print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
