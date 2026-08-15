@@ -149,6 +149,16 @@ function createCardHTML(article) {
         readClass = 'read-article watched-article';
     }
 
+    let unavailableOverlay = '';
+    try {
+        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+        const cacheTime = cache[article.epNumber];
+        if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
+            readClass += ' ep-unavailable';
+            unavailableOverlay = '<div class="unavailable-overlay"><span>⚠️ Unavailable</span></div>';
+        }
+    } catch(e) {}
+
     const timestamps = getTimestamps();
     const savedTimeSec = timestamps[article.id] || 0;
     const progressPercent = savedTimeSec ? Math.min(100, Math.round((savedTimeSec / 1260) * 100)) : 0;
@@ -159,6 +169,7 @@ function createCardHTML(article) {
                 <img src="${imageUrl}" alt="${article.title}" loading="lazy" class="card-img" onerror="this.src='https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode'">
                 <span class="card-duration-badge">${article.durationText || '21:45'}</span>
                 ${progressPercent > 0 ? `<div class="card-progress-container"><div class="card-progress-bar" style="width: ${progressPercent}%;"></div></div>` : ''}
+                ${unavailableOverlay}
             </a>
             <div class="card-content">
                 <div class="card-meta">
@@ -322,7 +333,7 @@ function openCleanPlayer(article) {
                     </div>
                     <button class="tmkoc-modal-close" onclick="closeCleanPlayer()">✕</button>
                 </div>
-                <div id="clean-modal-warning" style="display:none; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #fbbf24; padding: 12px; margin: 16px; border-radius: 8px; font-size: 0.85rem; text-align: center; line-height: 1.4;"></div>
+                <div id="clean-modal-warning" class="tmkoc-geo-warning"></div>
                 <div class="tmkoc-video-viewport">
                     <div id="clean-iframe-container"></div>
                 </div>
@@ -385,6 +396,35 @@ function openCleanPlayer(article) {
                         if (modalWarning) {
                             modalWarning.style.display = 'block';
                             modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked in your region, made private, or removed. Try using a VPN or searching SonyLIV. (Code: ${event.data})`;
+                        }
+                        try {
+                            const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+                            cache[article.epNumber] = Date.now();
+                            localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+                            const card = document.querySelector(`.card[data-id="${article.id}"]`);
+                            if (card && !card.classList.contains('ep-unavailable')) {
+                                card.classList.add('ep-unavailable');
+                                const imgWrap = card.querySelector('.card-img-wrap');
+                                if (imgWrap) imgWrap.insertAdjacentHTML('beforeend', '<div class="unavailable-overlay"><span>⚠️ Unavailable</span></div>');
+                            }
+                        } catch(e) {}
+                    },
+                    'onStateChange': function(event) {
+                        if (event.data === window.YT.PlayerState.PLAYING) {
+                            currentActiveEpId = article.id;
+                            try {
+                                const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+                                if (cache[article.epNumber]) {
+                                    delete cache[article.epNumber];
+                                    localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+                                    const card = document.querySelector(`.card[data-id="${article.id}"]`);
+                                    if (card) {
+                                        card.classList.remove('ep-unavailable');
+                                        const overlay = card.querySelector('.unavailable-overlay');
+                                        if (overlay) overlay.remove();
+                                    }
+                                }
+                            } catch(e) {}
                         }
                     }
                 }
