@@ -784,28 +784,7 @@ a:hover, a:visited, a:focus, a:active {
 }
 
 .ep-unavailable .card-img {
-    filter: grayscale(100%) opacity(0.5);
-}
-
-.unavailable-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.5);
-    z-index: 5;
-    pointer-events: none;
-}
-
-.unavailable-overlay span {
-    background: rgba(220, 38, 38, 0.9);
-    color: white;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    filter: grayscale(100%) opacity(0.6);
 }
 
 

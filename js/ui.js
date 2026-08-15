@@ -30,8 +30,56 @@ if(firstScriptTag) {
 // Geo-detect to handle Sony's India YouTube block on new episodes
 fetch('https://get.geojs.io/v1/ip/country.json')
     .then(r => r.json())
-    .then(d => { if (d.country === 'IN' || d.country_3 === 'IND') window.userIsIndia = true; })
+    .then(d => { 
+        if (d.country === 'IN' || d.country_3 === 'IND') window.userIsIndia = true; 
+        updateCardsGeoStatus();
+    })
     .catch(() => {});
+
+function checkIfGeoBlocked(article) {
+    if (!window.userIsIndia) return false;
+    if (!article.airDate) return false;
+    
+    // Check if it's a full episode (promos are usually <10 mins)
+    let isFull = true;
+    if (article.durationText) {
+        const parts = article.durationText.split(':');
+        if (parts.length === 2 && parseInt(parts[0]) < 10) isFull = false;
+    }
+    
+    if (isFull) {
+        const epDate = new Date(article.airDate);
+        if (!isNaN(epDate.getTime())) {
+            const daysOld = (Date.now() - epDate.getTime()) / (1000 * 3600 * 24);
+            if (daysOld <= 15) return true;
+        }
+    }
+    return false;
+}
+
+function updateCardsGeoStatus() {
+    document.querySelectorAll('.card').forEach(card => {
+        const id = card.getAttribute('data-id');
+        const article = allArticlesMap[id];
+        if (article) {
+            let isUnavail = checkIfGeoBlocked(article);
+            if (!isUnavail) {
+                try {
+                    const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+                    const cacheTime = cache[article.epNumber];
+                    if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
+                        isUnavail = true;
+                    }
+                } catch(e) {}
+            }
+            if (isUnavail) {
+                card.classList.add('ep-unavailable');
+            } else {
+                card.classList.remove('ep-unavailable');
+            }
+        }
+    });
+}
 
 function getCompletedWatchedList() {
     try {
@@ -149,15 +197,20 @@ function createCardHTML(article) {
         readClass = 'read-article watched-article';
     }
 
-    let unavailableOverlay = '';
-    try {
-        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-        const cacheTime = cache[article.epNumber];
-        if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
-            readClass += ' ep-unavailable';
-            unavailableOverlay = '<div class="unavailable-overlay"><span>⚠️ Unavailable</span></div>';
-        }
-    } catch(e) {}
+    let isUnavail = checkIfGeoBlocked(article);
+    if (!isUnavail) {
+        try {
+            const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+            const cacheTime = cache[article.epNumber];
+            if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
+                isUnavail = true;
+            }
+        } catch(e) {}
+    }
+    
+    if (isUnavail) {
+        readClass += ' ep-unavailable';
+    }
 
     const timestamps = getTimestamps();
     const savedTimeSec = timestamps[article.id] || 0;
@@ -169,7 +222,6 @@ function createCardHTML(article) {
                 <img src="${imageUrl}" alt="${article.title}" loading="lazy" class="card-img" onerror="this.src='https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode'">
                 <span class="card-duration-badge">${article.durationText || '21:45'}</span>
                 ${progressPercent > 0 ? `<div class="card-progress-container"><div class="card-progress-bar" style="width: ${progressPercent}%;"></div></div>` : ''}
-                ${unavailableOverlay}
             </a>
             <div class="card-content">
                 <div class="card-meta">
@@ -404,8 +456,6 @@ function openCleanPlayer(article) {
                             const card = document.querySelector(`.card[data-id="${article.id}"]`);
                             if (card && !card.classList.contains('ep-unavailable')) {
                                 card.classList.add('ep-unavailable');
-                                const imgWrap = card.querySelector('.card-img-wrap');
-                                if (imgWrap) imgWrap.insertAdjacentHTML('beforeend', '<div class="unavailable-overlay"><span>⚠️ Unavailable</span></div>');
                             }
                         } catch(e) {}
                     },
@@ -417,12 +467,12 @@ function openCleanPlayer(article) {
                                 if (cache[article.epNumber]) {
                                     delete cache[article.epNumber];
                                     localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
-                                    const card = document.querySelector(`.card[data-id="${article.id}"]`);
-                                    if (card) {
-                                        card.classList.remove('ep-unavailable');
-                                        const overlay = card.querySelector('.unavailable-overlay');
-                                        if (overlay) overlay.remove();
-                                    }
+                                }
+                                // Re-evaluate geo block state
+                                const isGeoBlocked = checkIfGeoBlocked(article);
+                                const card = document.querySelector(`.card[data-id="${article.id}"]`);
+                                if (card && !isGeoBlocked) {
+                                    card.classList.remove('ep-unavailable');
                                 }
                             } catch(e) {}
                         }
