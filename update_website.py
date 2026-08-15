@@ -223,9 +223,10 @@ def reverse_global_scan(rows):
                         
                     old_mins = get_minutes(row[5])
                     
-                    # Accept it if it's a full episode. Sony often replaces old geo-blocked uploads
-                    # with slightly shorter public uploads.
-                    if new_mins > old_mins + 1 or new_mins >= 18:
+                    # Accept it ONLY if it's a full episode AND we currently have a promo.
+                    # DO NOT blindly overwrite existing full episodes (which are likely stable/public)
+                    # with whatever Sony just uploaded (which is likely geo-blocked).
+                    if new_mins >= 18 and old_mins < 18:
                         url = f"https://www.youtube.com/watch?v={vid_id}"
                         time_text = vid.get('publishedTimeText', {}).get('simpleText', '')
                         date_str = parse_relative_date(time_text)
@@ -264,11 +265,11 @@ def main():
             reader = csv.reader(f)
             rows = list(reader)
 
-    # 1. Reverse Global Scan (Catch all re-uploads instantly via YouTube Search upload_date sort)
+    # 1. Reverse Global Scan (Catch extremely old re-uploads and promos)
     upgraded_count = reverse_global_scan(rows)
     
     # 2. Check for missing episode upgrades (old promos that might have been uploaded later but missed)
-    # We still do a quick check for exceptionally short promos in case the reverse scan missed them
+    # AND aggressively scan the last 100 episodes (using YouTube Relevance sort) to replace geo-blocked videos with public ones.
     for i, row in enumerate(rows):
         if len(row) >= 6:
             ep_num = int(row[0])
@@ -276,7 +277,9 @@ def main():
             duration_str = row[5]
             current_mins = get_minutes(duration_str)
             
-            if is_promo(title) or current_mins < 16:
+            is_recent = (i >= len(rows) - 100)
+            
+            if is_promo(title) or current_mins < 16 or is_recent:
                 print(f"Checking for better version for Ep {ep_num} (Currently: {duration_str})...")
                 result = find_episode(ep_num, require_full=False)
                 if result:
@@ -291,6 +294,12 @@ def main():
                         should_upgrade = True
                     elif new_mins > current_mins + 1:
                         should_upgrade = True
+                    elif is_recent and new_mins >= 18:
+                        # For recent episodes, if we found a new full episode (>18 mins) via relevance sort,
+                        # accept it. Sony often replaces geo-blocked early uploads with public uploads later.
+                        # Only upgrade if the video ID is actually different!
+                        if vid_id != row[2].split('v=')[-1]:
+                            should_upgrade = True
                         
                     if should_upgrade:
                         print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
