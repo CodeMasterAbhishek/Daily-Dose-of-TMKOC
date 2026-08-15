@@ -15,6 +15,17 @@ const STORAGE_HANDLE = 'tmkoc_user_handle';
 let activeWatchTrackerTimer = null;
 let currentActiveEpId = null;
 window.userIsIndia = false;
+let ytPlayer = null;
+
+// Load YouTube IFrame API dynamically
+const ytScript = document.createElement('script');
+ytScript.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+if(firstScriptTag) {
+    firstScriptTag.parentNode.insertBefore(ytScript, firstScriptTag);
+} else {
+    document.head.appendChild(ytScript);
+}
 
 // Geo-detect to handle Sony's India YouTube block on new episodes
 fetch('https://get.geojs.io/v1/ip/country.json')
@@ -313,7 +324,7 @@ function openCleanPlayer(article) {
                 </div>
                 <div id="clean-modal-warning" style="display:none; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #fbbf24; padding: 12px; margin: 16px; border-radius: 8px; font-size: 0.85rem; text-align: center; line-height: 1.4;"></div>
                 <div class="tmkoc-video-viewport">
-                    <iframe id="clean-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <div id="clean-iframe-container"></div>
                 </div>
                 <div class="tmkoc-modal-footer">
                     <button class="tmkoc-nav-btn" onclick="navCleanEp(-1)">◀ Previous Ep</button>
@@ -350,13 +361,45 @@ function openCleanPlayer(article) {
 
     const timestamps = getTimestamps();
     const resumeSeconds = timestamps[article.id] || 0;
-    const startParam = resumeSeconds > 5 ? `&start=${resumeSeconds}` : '';
 
-    const iframe = document.getElementById('clean-iframe');
-    if (article.videoId) {
-        iframe.src = `https://www.youtube.com/embed/${article.videoId}?autoplay=1&rel=0&controls=1${startParam}`;
+    const viewport = document.querySelector('.tmkoc-video-viewport');
+    
+    if (window.YT && window.YT.Player) {
+        if (ytPlayer) {
+            ytPlayer.destroy();
+        }
+        viewport.innerHTML = '<div id="clean-iframe-container"></div>';
+        
+        const videoIdToPlay = article.videoId || '';
+        if (videoIdToPlay) {
+            ytPlayer = new window.YT.Player('clean-iframe-container', {
+                videoId: videoIdToPlay,
+                playerVars: { 
+                    'autoplay': 1, 
+                    'rel': 0, 
+                    'controls': 1,
+                    'start': resumeSeconds
+                },
+                events: {
+                    'onError': function(event) {
+                        if (modalWarning) {
+                            modalWarning.style.display = 'block';
+                            modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked in your region, made private, or removed. Try using a VPN or searching SonyLIV. (Code: ${event.data})`;
+                        }
+                    }
+                }
+            });
+        } else {
+            viewport.innerHTML = `<iframe id="clean-iframe" src="https://www.youtube.com/embed?listType=search&list=Taarak+Mehta+Ka+Ooltah+Chashmah+Episode+${article.epNumber}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
     } else {
-        iframe.src = `https://www.youtube.com/embed?listType=search&list=Taarak+Mehta+Ka+Ooltah+Chashmah+Episode+${article.epNumber}`;
+        // Fallback if YT API fails to load
+        const startParam = resumeSeconds > 5 ? `&start=${resumeSeconds}` : '';
+        if (article.videoId) {
+            viewport.innerHTML = `<iframe id="clean-iframe" src="https://www.youtube.com/embed/${article.videoId}?autoplay=1&rel=0&controls=1${startParam}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        } else {
+            viewport.innerHTML = `<iframe id="clean-iframe" src="https://www.youtube.com/embed?listType=search&list=Taarak+Mehta+Ka+Ooltah+Chashmah+Episode+${article.epNumber}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
     }
 
     backdrop.style.display = 'flex';
@@ -368,6 +411,10 @@ function openCleanPlayer(article) {
 window.closeCleanPlayer = function() {
     const backdrop = document.getElementById('tmkoc-clean-backdrop');
     if (backdrop) backdrop.style.display = 'none';
+    if (ytPlayer) {
+        try { ytPlayer.destroy(); } catch(e) {}
+        ytPlayer = null;
+    }
     const iframe = document.getElementById('clean-iframe');
     if (iframe) iframe.src = '';
     document.body.style.overflow = 'auto';
