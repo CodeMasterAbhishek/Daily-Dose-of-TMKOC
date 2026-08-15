@@ -36,11 +36,9 @@ def get_minutes(duration_str: str) -> int:
         return int(parts[0])
     return 0
 
-def is_promo(title: str, duration_str: str) -> bool:
+def is_promo(title: str) -> bool:
     title_lower = title.lower()
     if any(k in title_lower for k in ['teaser', 'promo', 'precap', 'coming up next']):
-        return True
-    if get_minutes(duration_str) < 15:
         return True
     return False
 
@@ -145,6 +143,9 @@ def find_episode(ep_num: int, require_full: bool = False):
         f"TMKOC Episode {ep_num} Full Episode",
     ]
 
+    best_match = None
+    best_duration = -1
+
     for query in search_queries:
         try:
             videos = scrapetube.get_search(query, limit=8)
@@ -161,14 +162,20 @@ def find_episode(ep_num: int, require_full: bool = False):
                     date_str = parse_relative_date(time_text)
                     duration_str = vid.get('lengthText', {}).get('simpleText', '21:45')
                     
-                    if require_full and is_promo(title, duration_str):
+                    if require_full and is_promo(title):
                         continue
                         
-                    return (vid_id, title, url, date_str, duration_str)
+                    mins = get_minutes(duration_str)
+                    if mins > best_duration:
+                        best_duration = mins
+                        best_match = (vid_id, title, url, date_str, duration_str)
         except Exception:
             continue
+            
+        if best_duration > 15:
+            break
 
-    return None
+    return best_match
 
 
 def main():
@@ -192,23 +199,41 @@ def main():
             reader = csv.reader(f)
             rows = list(reader)
 
-    # 1. Upgrade Promos
+    # 1. Upgrade Promos and scan for longer versions
     upgraded_count = 0
-    for i, row in enumerate(rows):
+    check_start_index = max(0, len(rows) - 20)
+    
+    for i in range(check_start_index, len(rows)):
+        row = rows[i]
         if len(row) >= 6:
             ep_num = int(row[0])
             title = row[1]
             duration_str = row[5]
-            if is_promo(title, duration_str):
-                print(f"Checking for full episode upgrade for Ep {ep_num} (Currently: {duration_str})...")
-                result = find_episode(ep_num, require_full=True)
+            current_mins = get_minutes(duration_str)
+            
+            # Check for upgrades if it's a promo or under 25 mins (might have a longer version)
+            if is_promo(title) or current_mins < 25:
+                print(f"Checking for better version for Ep {ep_num} (Currently: {duration_str})...")
+                result = find_episode(ep_num, require_full=False)
                 if result:
                     vid_id, new_title, new_url, new_date_str, new_duration_str = result
-                    print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
-                    rows[i] = [ep_num, new_title, new_url, "Found", new_date_str if new_date_str else row[4], new_duration_str]
-                    upgraded_count += 1
-                else:
-                    print(f"  [WAITING] Full episode not yet available for Ep {ep_num}.")
+                    new_mins = get_minutes(new_duration_str)
+                    
+                    old_is_promo = is_promo(title)
+                    new_is_promo = is_promo(new_title)
+                    
+                    should_upgrade = False
+                    if old_is_promo and not new_is_promo:
+                        should_upgrade = True
+                    elif new_mins > current_mins + 1:
+                        should_upgrade = True
+                        
+                    if should_upgrade:
+                        print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
+                        rows[i] = [ep_num, new_title, new_url, "Found", new_date_str if new_date_str else row[4], new_duration_str]
+                        upgraded_count += 1
+                    else:
+                        print(f"  [KEPT] Existing version is optimal.")
 
     if upgraded_count > 0:
         with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
