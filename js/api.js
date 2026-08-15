@@ -62,23 +62,28 @@ export async function fetchNewsData() {
             const line = lines[i].trim();
             if (!line) continue;
 
-            const match = line.match(/^(\d+),"?([^",]+|"[^"]+")?"?,([^,]+),?([^,]+)?,?(.*)?$/);
-            let epNum = 0, title = '', url = '', status = 'Found', csvDate = '';
-
-            if (match) {
-                epNum = parseInt(match[1]);
-                title = (match[2] || '').replace(/^"|"$/g, '');
-                url = match[3] || '';
-                status = match[4] || 'Found';
-                csvDate = match[5] || '';
-            } else {
-                const parts = line.split(',');
-                epNum = parseInt(parts[0]);
-                title = parts[1] || '';
-                url = parts[2] || '';
-                status = parts[3] || 'Found';
-                csvDate = parts[4] || '';
+            const parts = [];
+            let current = '';
+            let inQuotes = false;
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    parts.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
             }
+            parts.push(current);
+            
+            const epNum = parseInt(parts[0] || '0');
+            const title = (parts[1] || '').trim();
+            const url = (parts[2] || '').trim();
+            const status = (parts[3] || 'Found').trim();
+            const csvDate = (parts[4] || '').trim();
+            const csvDuration = (parts[5] || '').trim();
 
             if (epNum > 0) {
                 const realEpNum = extractRealEpNumber(title, epNum);
@@ -89,7 +94,7 @@ export async function fetchNewsData() {
                     ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
                     : 'https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode';
 
-                const durationText = realEpNum === 4778 ? '09:48' : '21:45';
+                const durationText = csvDuration ? csvDuration : (realEpNum === 4778 ? '09:48' : '21:45');
 
                 const parsedDate = new Date(airDate);
                 const pubDateStr = isNaN(parsedDate) ? new Date().toISOString() : parsedDate.toISOString();

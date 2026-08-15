@@ -29,6 +29,11 @@ CSV_FILE = "episodes.csv"
 
 
 def is_single_episode(title: str, description: str, channel: str, ep_num: int) -> bool:
+    # Strict channel filter
+    valid_channels = ['sony sab', 'sony pal', 'taarak mehta ka ooltah chashmah', 'taarak mehta ka ooltah chashmah episodes']
+    if channel.lower() not in valid_channels:
+        return False
+
     title_lower = title.lower()
     desc_lower = description.lower()
     combined_text = title_lower + " " + desc_lower
@@ -134,7 +139,8 @@ def find_next_episode(ep_num: int):
                     url = f"https://www.youtube.com/watch?v={vid_id}"
                     time_text = vid.get('publishedTimeText', {}).get('simpleText', '')
                     date_str = parse_relative_date(time_text)
-                    return (vid_id, title, url, date_str)
+                    duration_str = vid.get('lengthText', {}).get('simpleText', '21:45')
+                    return (vid_id, title, url, date_str, duration_str)
         except Exception:
             continue
 
@@ -164,15 +170,15 @@ def main():
         result = find_next_episode(next_ep)
 
         if result:
-            vid_id, title, url, date_str = result
+            vid_id, title, url, date_str, duration_str = result
             print(f"[FOUND] Ep {next_ep}: {title} ({url})")
 
             with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if date_str:
-                    writer.writerow([next_ep, title, url, "Found", date_str])
+                    writer.writerow([next_ep, title, url, "Found", date_str, duration_str])
                 else:
-                    writer.writerow([next_ep, title, url, "Found"])
+                    writer.writerow([next_ep, title, url, "Found", "", duration_str])
 
             last_ep = next_ep
             episodes_added += 1
