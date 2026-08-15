@@ -230,6 +230,13 @@ def main():
                         should_upgrade = True
                     elif new_mins > current_mins + 1:
                         should_upgrade = True
+                    elif is_recent and new_mins >= 18 and new_mins < current_mins + 1:
+                        # For recent episodes, if we found a new full episode (>18 mins),
+                        # accept it even if it's slightly shorter. Sony often replaces geo-blocked
+                        # early uploads with slightly shorter public uploads later.
+                        # Only upgrade if the video ID is actually different!
+                        if vid_id != row[2].split('v=')[-1]:
+                            should_upgrade = True
                         
                     if should_upgrade:
                         print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")

@@ -46,18 +46,22 @@ function processBgCheckerQueue() {
     bgCheckerProcessing = true;
     const article = bgCheckerQueue[0];
     
-    // Create temporary hidden div
+    // Create temporary wrapper div (1x1) to prevent browser throttling of the iframe
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.id = 'bg-checker-wrapper';
+    wrapperDiv.style.position = 'fixed';
+    wrapperDiv.style.bottom = '0';
+    wrapperDiv.style.right = '0';
+    wrapperDiv.style.width = '1px';
+    wrapperDiv.style.height = '1px';
+    wrapperDiv.style.overflow = 'hidden';
+    wrapperDiv.style.zIndex = '-9999';
+    wrapperDiv.style.pointerEvents = 'none';
+    
     const tempDiv = document.createElement('div');
     tempDiv.id = 'bg-checker-temp';
-    tempDiv.style.position = 'fixed';
-    tempDiv.style.width = '200px';
-    tempDiv.style.height = '200px';
-    tempDiv.style.bottom = '0';
-    tempDiv.style.right = '0';
-    tempDiv.style.opacity = '0.01';
-    tempDiv.style.zIndex = '-9999';
-    tempDiv.style.pointerEvents = 'none';
-    document.body.appendChild(tempDiv);
+    wrapperDiv.appendChild(tempDiv);
+    document.body.appendChild(wrapperDiv);
 
     let tempPlayer = null;
     let handled = false;
@@ -68,7 +72,7 @@ function processBgCheckerQueue() {
         if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
         try { if (tempPlayer) tempPlayer.destroy(); } catch(e) {}
         try { 
-            const el = document.getElementById('bg-checker-temp');
+            const el = document.getElementById('bg-checker-wrapper');
             if (el) document.body.removeChild(el); 
         } catch(e) {}
         
@@ -500,7 +504,7 @@ function openCleanPlayer(article) {
                     'onError': function(event) {
                         if (modalWarning) {
                             modalWarning.style.display = 'block';
-                            modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked, made private, or Sony disabled embedding. <a href="https://www.youtube.com/watch?v=${article.videoId}" target="_blank" style="color: #d97706; text-decoration: underline;">Watch directly on YouTube</a>. (Code: ${event.data})`;
+                            modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked, made private, or Sony disabled embedding. <a href="https://www.youtube.com/results?search_query=Taarak+Mehta+Ka+Ooltah+Chashmah+Episode+${article.epNumber}" target="_blank" style="color: #d97706; text-decoration: underline;">Search for Ep ${article.epNumber} on YouTube</a>. (Code: ${event.data})`;
                         }
                         try {
                             verifiedVideos.add(article.id);
