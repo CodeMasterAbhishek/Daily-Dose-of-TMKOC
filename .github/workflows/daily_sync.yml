@@ -2,8 +2,8 @@ name: Daily TMKOC Episode Sync
 
 on:
   schedule:
-    # Runs daily at 18:00 UTC (11:30 PM IST after new TMKOC episodes release)
-    - cron: '0 18 * * *'
+    # Runs every 30 minutes to aggressively catch re-uploaded episodes and dead links
+    - cron: '*/30 * * * *'
   workflow_dispatch: # Allows manual trigger from GitHub UI anytime
 
 jobs:
