@@ -199,20 +199,23 @@ def main():
             reader = csv.reader(f)
             rows = list(reader)
 
-    # 1. Upgrade Promos and scan for longer versions
+    # 1. Upgrade Promos and scan for longer versions across the ENTIRE database
     upgraded_count = 0
-    check_start_index = max(0, len(rows) - 20)
     
-    for i in range(check_start_index, len(rows)):
-        row = rows[i]
+    for i, row in enumerate(rows):
         if len(row) >= 6:
             ep_num = int(row[0])
             title = row[1]
             duration_str = row[5]
             current_mins = get_minutes(duration_str)
             
-            # Check for upgrades if it's a promo or under 25 mins (might have a longer version)
-            if is_promo(title) or current_mins < 25:
+            is_recent = (i >= len(rows) - 20)
+            
+            # Check for upgrades if:
+            # 1. It is a known promo (has "Teaser/Promo" in title)
+            # 2. It is in the last 20 episodes and under 25 mins (to catch 16m -> 21m upgrades)
+            # 3. It is older, but exceptionally short (under 16 mins) which means it's likely an old promo
+            if is_promo(title) or (is_recent and current_mins < 25) or (not is_recent and current_mins < 16):
                 print(f"Checking for better version for Ep {ep_num} (Currently: {duration_str})...")
                 result = find_episode(ep_num, require_full=False)
                 if result:
