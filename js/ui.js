@@ -27,58 +27,105 @@ if(firstScriptTag) {
     document.head.appendChild(ytScript);
 }
 
-// Geo-detect to handle Sony's India YouTube block on new episodes
-fetch('https://get.geojs.io/v1/ip/country.json')
-    .then(r => r.json())
-    .then(d => { 
-        if (d.country === 'IN' || d.country_3 === 'IND') window.userIsIndia = true; 
-        updateCardsGeoStatus();
-    })
-    .catch(() => {});
+// --- Background Geo-block Checker ---
+let bgCheckerPlayer = null;
+let bgCheckerQueue = [];
+let bgCheckerProcessing = false;
+let checkObserver = null;
 
-function checkIfGeoBlocked(article) {
-    if (!window.userIsIndia) return false;
-    if (!article.airDate) return false;
-    
-    // Check if it's a full episode (promos are usually <10 mins)
-    let isFull = true;
-    if (article.durationText) {
-        const parts = article.durationText.split(':');
-        if (parts.length === 2 && parseInt(parts[0]) < 10) isFull = false;
-    }
-    
-    if (isFull) {
-        const epDate = new Date(article.airDate);
-        if (!isNaN(epDate.getTime())) {
-            const daysOld = (Date.now() - epDate.getTime()) / (1000 * 3600 * 24);
-            if (daysOld <= 15) return true;
-        }
-    }
-    return false;
-}
+const checkerDiv = document.createElement('div');
+checkerDiv.id = 'tmkoc-bg-checker';
+checkerDiv.style.position = 'absolute';
+checkerDiv.style.width = '1px';
+checkerDiv.style.height = '1px';
+checkerDiv.style.top = '-9999px';
+checkerDiv.style.left = '-9999px';
+checkerDiv.style.opacity = '0';
+document.body.appendChild(checkerDiv);
 
-function updateCardsGeoStatus() {
-    document.querySelectorAll('.card').forEach(card => {
-        const id = card.getAttribute('data-id');
-        const article = allArticlesMap[id];
-        if (article) {
-            let isUnavail = checkIfGeoBlocked(article);
-            if (!isUnavail) {
-                try {
-                    const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                    const cacheTime = cache[article.epNumber];
-                    if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
-                        isUnavail = true;
-                    }
-                } catch(e) {}
-            }
-            if (isUnavail) {
-                card.classList.add('ep-unavailable');
-            } else {
-                card.classList.remove('ep-unavailable');
-            }
+window.onYouTubeIframeAPIReady = function() {
+    bgCheckerPlayer = new window.YT.Player('tmkoc-bg-checker', {
+        height: '1',
+        width: '1',
+        playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1 },
+        events: {
+            'onReady': processBgCheckerQueue,
+            'onStateChange': onBgCheckerStateChange,
+            'onError': onBgCheckerError
         }
     });
+};
+
+function processBgCheckerQueue() {
+    if (bgCheckerProcessing || bgCheckerQueue.length === 0 || !bgCheckerPlayer || typeof bgCheckerPlayer.loadVideoById !== 'function') return;
+    
+    bgCheckerProcessing = true;
+    const article = bgCheckerQueue[0];
+    
+    try {
+        bgCheckerPlayer.loadVideoById({videoId: article.videoId});
+    } catch(e) {
+        bgCheckerProcessing = false;
+        bgCheckerQueue.shift();
+        setTimeout(processBgCheckerQueue, 100);
+    }
+}
+
+function handleCheckerResult(article, isUnavailable) {
+    try {
+        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+        cache[article.epNumber] = { time: Date.now(), blocked: isUnavailable };
+        localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+        
+        const card = document.querySelector(`.card[data-id="${article.id}"]`);
+        if (card) {
+            if (isUnavailable) card.classList.add('ep-unavailable');
+            else card.classList.remove('ep-unavailable');
+        }
+    } catch(e) {}
+    
+    bgCheckerQueue.shift();
+    bgCheckerProcessing = false;
+    setTimeout(processBgCheckerQueue, 250);
+}
+
+function onBgCheckerStateChange(event) {
+    if (event.data === window.YT.PlayerState.PLAYING || event.data === window.YT.PlayerState.BUFFERING) {
+        try { bgCheckerPlayer.stopVideo(); } catch(e) {}
+        if (bgCheckerQueue.length > 0) handleCheckerResult(bgCheckerQueue[0], false);
+    }
+}
+
+function onBgCheckerError(event) {
+    if (bgCheckerQueue.length > 0) handleCheckerResult(bgCheckerQueue[0], true);
+}
+
+function initIntersectionObserver() {
+    if (checkObserver) return;
+    checkObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const card = entry.target;
+                const id = card.getAttribute('data-id');
+                const article = allArticlesMap[id];
+                if (article && article.videoId) {
+                    // Check if we need to verify this video
+                    try {
+                        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+                        const cacheEntry = cache[article.epNumber];
+                        // Cache for 6 hours
+                        if (!cacheEntry || (Date.now() - cacheEntry.time > 6 * 60 * 60 * 1000)) {
+                            if (!bgCheckerQueue.some(a => a.id === article.id)) {
+                                bgCheckerQueue.push(article);
+                                processBgCheckerQueue();
+                            }
+                        }
+                    } catch(e) {}
+                }
+                checkObserver.unobserve(card);
+            }
+        });
+    }, { rootMargin: '200px' });
 }
 
 function getCompletedWatchedList() {
@@ -197,16 +244,14 @@ function createCardHTML(article) {
         readClass = 'read-article watched-article';
     }
 
-    let isUnavail = checkIfGeoBlocked(article);
-    if (!isUnavail) {
-        try {
-            const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-            const cacheTime = cache[article.epNumber];
-            if (cacheTime && (Date.now() - cacheTime < 24 * 60 * 60 * 1000)) {
-                isUnavail = true;
-            }
-        } catch(e) {}
-    }
+    let isUnavail = false;
+    try {
+        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
+        const cacheEntry = cache[article.epNumber];
+        if (cacheEntry && (Date.now() - cacheEntry.time < 6 * 60 * 60 * 1000)) {
+            if (cacheEntry.blocked) isUnavail = true;
+        }
+    } catch(e) {}
     
     if (isUnavail) {
         readClass += ' ep-unavailable';
@@ -241,21 +286,23 @@ export function renderArticles(articles, containerId, append = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    if (!append) {
-        container.innerHTML = '';
-    }
+    if (!append) container.innerHTML = '';
 
     if (articles.length === 0 && !append) {
         container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; opacity: 0.6;">No episodes found matching your search.</div>';
         return;
     }
 
+    initIntersectionObserver();
+
     const fragment = document.createDocumentFragment();
     const tempDiv = document.createElement('div');
 
     articles.forEach(article => {
         tempDiv.innerHTML = createCardHTML(article);
-        fragment.appendChild(tempDiv.firstElementChild);
+        const cardElem = tempDiv.firstElementChild;
+        fragment.appendChild(cardElem);
+        if (checkObserver) checkObserver.observe(cardElem);
     });
 
     container.appendChild(fragment);
@@ -451,7 +498,7 @@ function openCleanPlayer(article) {
                         }
                         try {
                             const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                            cache[article.epNumber] = Date.now();
+                            cache[article.epNumber] = { time: Date.now(), blocked: true };
                             localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
                             const card = document.querySelector(`.card[data-id="${article.id}"]`);
                             if (card && !card.classList.contains('ep-unavailable')) {
@@ -464,16 +511,11 @@ function openCleanPlayer(article) {
                             currentActiveEpId = article.id;
                             try {
                                 const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                                if (cache[article.epNumber]) {
-                                    delete cache[article.epNumber];
-                                    localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
-                                }
-                                // Re-evaluate geo block state
-                                const isGeoBlocked = checkIfGeoBlocked(article);
+                                cache[article.epNumber] = { time: Date.now(), blocked: false };
+                                localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+                                
                                 const card = document.querySelector(`.card[data-id="${article.id}"]`);
-                                if (card && !isGeoBlocked) {
-                                    card.classList.remove('ep-unavailable');
-                                }
+                                if (card) card.classList.remove('ep-unavailable');
                             } catch(e) {}
                         }
                     }
