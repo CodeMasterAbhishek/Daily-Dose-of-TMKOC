@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import time
+import datetime
 
 try:
     import scrapetube
@@ -77,7 +78,41 @@ def extract_description_text(vid_dict: dict) -> str:
     return desc_text.strip()
 
 
-def find_next_episode(ep_num: int) -> tuple[str, str, str] | None:
+def parse_relative_date(time_text: str) -> str:
+    if not time_text:
+        return ""
+    
+    text = time_text.lower()
+    now = datetime.datetime.now()
+    
+    match = re.search(r'(\d+)\s+(minute|hour|day|week|month|year)s?\s+ago', text)
+    if not match:
+        return ""
+        
+    val = int(match.group(1))
+    unit = match.group(2)
+    
+    if unit == 'minute':
+        delta = datetime.timedelta(minutes=val)
+    elif unit == 'hour':
+        delta = datetime.timedelta(hours=val)
+    elif unit == 'day':
+        delta = datetime.timedelta(days=val)
+    elif unit == 'week':
+        delta = datetime.timedelta(weeks=val)
+    elif unit == 'month':
+        delta = datetime.timedelta(days=val * 30)
+    elif unit == 'year':
+        delta = datetime.timedelta(days=val * 365)
+    else:
+        delta = datetime.timedelta(0)
+        
+    target_date = now - delta
+    # Return as "DD MMM YYYY" (e.g. 14 Aug 2026)
+    return target_date.strftime("%d %b %Y")
+
+
+def find_next_episode(ep_num: int):
     search_queries = [
         f"Ep {ep_num} Taarak Mehta Ka Ooltah Chashmah",
         f"Taarak Mehta Ka Ooltah Chashmah Episode {ep_num}",
@@ -97,7 +132,9 @@ def find_next_episode(ep_num: int) -> tuple[str, str, str] | None:
 
                 if vid_id and is_single_episode(title, description, channel, ep_num):
                     url = f"https://www.youtube.com/watch?v={vid_id}"
-                    return (vid_id, title, url)
+                    time_text = vid.get('publishedTimeText', {}).get('simpleText', '')
+                    date_str = parse_relative_date(time_text)
+                    return (vid_id, title, url, date_str)
         except Exception:
             continue
 
@@ -127,12 +164,15 @@ def main():
         result = find_next_episode(next_ep)
 
         if result:
-            vid_id, title, url = result
+            vid_id, title, url, date_str = result
             print(f"[FOUND] Ep {next_ep}: {title} ({url})")
 
             with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([next_ep, title, url, "Found"])
+                if date_str:
+                    writer.writerow([next_ep, title, url, "Found", date_str])
+                else:
+                    writer.writerow([next_ep, title, url, "Found"])
 
             last_ep = next_ep
             episodes_added += 1

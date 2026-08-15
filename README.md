@@ -19,13 +19,12 @@
 
 ## Project Overview
 
-**Daily Dose of TMKOC** is a modern **GitOps-driven video application** and YouTube playlist manager. 
+**Daily Dose of TMKOC** is a modern **GitOps-driven video application**. 
 
-Instead of paying for backend servers or risking third-party rate limits, this project uses GitHub Actions to automate episode discovery, state tracking, and YouTube playlist syncing. It compiles all 4,500+ episodes into a static dataset (`episodes.csv`) served globally via GitHub Pages CDN.
+Instead of paying for backend servers or risking third-party rate limits, this project uses GitHub Actions to automate episode discovery and state tracking. It compiles all 4,500+ episodes into a static dataset (`episodes.csv`) served globally via GitHub Pages CDN.
 
 1. **Automated Scraping & Sync Engine:** Runs daily via GitHub Actions to detect newly released episodes (Sony SAB / Sony PAL) and append them to the master database.
-2. **Auto-Populating Playlist Bot:** Gradually populates past episodes into the official YouTube Playlist (`PLLzj-79gxIKM`) at a rate of 190 videos/day under API quota constraints.
-3. **Glassmorphic UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
+2. **Glassmorphic UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
 
 ---
 
@@ -46,13 +45,11 @@ sequenceDiagram
     participant SAB as Official YouTube (Sony SAB)
     participant Action as GitHub Actions Bot
     participant DB as episodes.csv & state.json
-    participant API as YouTube Data API v3
     participant Site as GitHub Pages Web App
 
     Note over Action: Daily Trigger (18:00 UTC)
     Action->>SAB: Scrape latest episode releases
     Action->>DB: Append new episode to CSV & State
-    Action->>API: Add episode to YouTube Playlist (190 batch/day)
     Action->>DB: Commit updated state back to GitHub
     DB->>Site: Auto-deploy live web app updates
 ```
@@ -73,8 +70,6 @@ tmkoc-youtube-playlist-bot/
 │   ├── api.js                  # Data ingestion & CSV parser
 │   ├── ui.js                   # DOM renderer & Custom Video Player Engine
 │   └── app.js                  # App initialization, theme & event listeners
-├── auto_update_playlist.py     # Main daily Python sync script
-├── populate_daily_batch.py     # Past episodes batch populator script
 ├── episodes.csv                # Master dataset of all 4,500+ episodes
 ├── state.json                  # Last processed episode state tracker
 ├── index.html                  # Main web application entry point
@@ -91,14 +86,7 @@ git clone https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot.git
 cd tmkoc-youtube-playlist-bot
 ```
 
-### 2. Configure GitHub Secrets
-For automated YouTube Playlist updates, configure the following secrets under **Settings > Secrets and variables > Actions**:
-- `YOUTUBE_CLIENT_ID`
-- `YOUTUBE_CLIENT_SECRET`
-- `YOUTUBE_REFRESH_TOKEN`
-- `YOUTUBE_PLAYLIST_ID`
-
-### 3. Enable GitHub Pages
+### 2. Enable GitHub Pages
 - Go to **Settings > Pages**.
 - Set Source to **Deploy from a branch**.
 - Select branch `main` and folder `/ (root)`.

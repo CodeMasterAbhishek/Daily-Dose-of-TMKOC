@@ -1,4 +1,4 @@
-name: Daily TMKOC Playlist Auto-Sync
+name: Daily TMKOC Episode Sync
 
 on:
   schedule:
@@ -27,13 +27,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Auto-Sync Script
-        env:
-          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
-          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
-          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          YOUTUBE_PLAYLIST_ID: ${{ secrets.YOUTUBE_PLAYLIST_ID }}
         run: |
-          python auto_update_playlist.py
+          python update_website.py
 
       - name: Commit and Push Changes
         run: |
