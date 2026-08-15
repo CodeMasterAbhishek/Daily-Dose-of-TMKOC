@@ -14,6 +14,13 @@ const STORAGE_HANDLE = 'tmkoc_user_handle';
 
 let activeWatchTrackerTimer = null;
 let currentActiveEpId = null;
+window.userIsIndia = false;
+
+// Geo-detect to handle Sony's India YouTube block on new episodes
+fetch('https://get.geojs.io/v1/ip/country.json')
+    .then(r => r.json())
+    .then(d => { if (d.country === 'IN' || d.country_3 === 'IND') window.userIsIndia = true; })
+    .catch(() => {});
 
 function getCompletedWatchedList() {
     try {
@@ -304,6 +311,7 @@ function openCleanPlayer(article) {
                     </div>
                     <button class="tmkoc-modal-close" onclick="closeCleanPlayer()">✕</button>
                 </div>
+                <div id="clean-modal-warning" style="display:none; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #fbbf24; padding: 12px; margin: 16px; border-radius: 8px; font-size: 0.85rem; text-align: center; line-height: 1.4;"></div>
                 <div class="tmkoc-video-viewport">
                     <iframe id="clean-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
@@ -314,6 +322,27 @@ function openCleanPlayer(article) {
             </div>
         `;
         document.body.appendChild(backdrop);
+        
+        // Fetch GeoIP
+        fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
+            window.userIsIndia = (data.country_code === 'IN');
+        }).catch(() => {});
+    }
+
+    const modalWarning = document.getElementById('clean-modal-warning');
+    if (modalWarning && article.airDate) {
+        const epDate = new Date(article.airDate);
+        if (!isNaN(epDate.getTime())) {
+            const daysOld = (Date.now() - epDate.getTime()) / (1000 * 3600 * 24);
+            if (window.userIsIndia && daysOld < 7) {
+                modalWarning.style.display = 'block';
+                modalWarning.innerHTML = '⚠️ <strong>Geo-Block Notice:</strong> This recent episode is likely blocked by Sony on YouTube in India. If the video below says "Unavailable", please turn on your VPN or watch directly on SonyLIV.';
+            } else {
+                modalWarning.style.display = 'none';
+            }
+        } else {
+            modalWarning.style.display = 'none';
+        }
     }
 
     document.getElementById('clean-title').textContent = article.title;
