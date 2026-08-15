@@ -28,70 +28,86 @@ if(firstScriptTag) {
 }
 
 // --- Background Geo-block Checker ---
-let bgCheckerPlayer = null;
 let bgCheckerQueue = [];
 let bgCheckerProcessing = false;
 let checkObserver = null;
 let bgCheckerTimeout = null;
 const verifiedVideos = new Set();
 
-const checkerDiv = document.createElement('div');
-checkerDiv.id = 'tmkoc-bg-checker';
-checkerDiv.style.position = 'absolute';
-checkerDiv.style.width = '1px';
-checkerDiv.style.height = '1px';
-checkerDiv.style.top = '-9999px';
-checkerDiv.style.left = '-9999px';
-checkerDiv.style.opacity = '0';
-document.body.appendChild(checkerDiv);
-
-function initBgChecker() {
-    if (bgCheckerPlayer) return;
-    if (window.YT && window.YT.Player) {
-        bgCheckerPlayer = new window.YT.Player('tmkoc-bg-checker', {
-            height: '1',
-            width: '1',
-            playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1 },
-            events: {
-                'onReady': processBgCheckerQueue,
-                'onStateChange': onBgCheckerStateChange,
-                'onError': onBgCheckerError
-            }
-        });
-    }
-}
-
-window.onYouTubeIframeAPIReady = initBgChecker;
-setTimeout(initBgChecker, 1000);
-setTimeout(initBgChecker, 3000);
+// Remove initBgChecker completely as we create players on the fly
+window.onYouTubeIframeAPIReady = function() {
+    // API is ready. Trigger the queue if items are waiting.
+    if (bgCheckerQueue.length > 0) processBgCheckerQueue();
+};
 
 function processBgCheckerQueue() {
-    if (bgCheckerProcessing || bgCheckerQueue.length === 0 || !bgCheckerPlayer || typeof bgCheckerPlayer.loadVideoById !== 'function') return;
+    if (bgCheckerProcessing || bgCheckerQueue.length === 0 || !window.YT || !window.YT.Player) return;
     
     bgCheckerProcessing = true;
     const article = bgCheckerQueue[0];
     
-    try {
-        bgCheckerPlayer.loadVideoById({videoId: article.videoId});
-        
-        // Timeout to assume available if no error fires in 6 seconds (slow VPNs)
+    // Create temporary hidden div
+    const tempDiv = document.createElement('div');
+    tempDiv.id = 'bg-checker-temp';
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.width = '200px';
+    tempDiv.style.height = '200px';
+    tempDiv.style.bottom = '0';
+    tempDiv.style.right = '0';
+    tempDiv.style.opacity = '0.01';
+    tempDiv.style.zIndex = '-9999';
+    tempDiv.style.pointerEvents = 'none';
+    document.body.appendChild(tempDiv);
+
+    let tempPlayer = null;
+    let handled = false;
+
+    function cleanupAndNext(isUnavailable) {
+        if (handled) return;
+        handled = true;
         if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
-        bgCheckerTimeout = setTimeout(() => {
-            if (bgCheckerQueue.length > 0 && bgCheckerQueue[0].id === article.id) {
-                try { bgCheckerPlayer.stopVideo(); } catch(e) {}
-                handleCheckerResult(article, false);
+        try { if (tempPlayer) tempPlayer.destroy(); } catch(e) {}
+        try { 
+            const el = document.getElementById('bg-checker-temp');
+            if (el) document.body.removeChild(el); 
+        } catch(e) {}
+        
+        handleCheckerResult(article, isUnavailable);
+    }
+
+    try {
+        tempPlayer = new window.YT.Player('bg-checker-temp', {
+            height: '200',
+            width: '200',
+            videoId: article.videoId,
+            playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1, 'autoplay': 1 },
+            events: {
+                'onReady': function() {
+                    // Grace period: if no error fires in 1.5s after ready, assume it's available
+                    setTimeout(() => cleanupAndNext(false), 1500);
+                },
+                'onStateChange': function(event) {
+                    if (event.data === window.YT.PlayerState.PLAYING || event.data === window.YT.PlayerState.BUFFERING) {
+                        cleanupAndNext(false);
+                    }
+                },
+                'onError': function(event) {
+                    // Code 100, 101, 150
+                    cleanupAndNext(true);
+                }
             }
-        }, 6000);
+        });
+        
+        // Failsafe timeout in case YT hangs completely
+        if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
+        bgCheckerTimeout = setTimeout(() => cleanupAndNext(false), 6000);
         
     } catch(e) {
-        bgCheckerProcessing = false;
-        bgCheckerQueue.shift();
-        setTimeout(processBgCheckerQueue, 100);
+        cleanupAndNext(false);
     }
 }
 
 function handleCheckerResult(article, isUnavailable) {
-    if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
     try {
         verifiedVideos.add(article.id);
         
@@ -107,16 +123,7 @@ function handleCheckerResult(article, isUnavailable) {
     setTimeout(processBgCheckerQueue, 250);
 }
 
-function onBgCheckerStateChange(event) {
-    if (event.data === window.YT.PlayerState.PLAYING || event.data === window.YT.PlayerState.BUFFERING) {
-        try { bgCheckerPlayer.stopVideo(); } catch(e) {}
-        if (bgCheckerQueue.length > 0) handleCheckerResult(bgCheckerQueue[0], false);
-    }
-}
 
-function onBgCheckerError(event) {
-    if (bgCheckerQueue.length > 0) handleCheckerResult(bgCheckerQueue[0], true);
-}
 
 function initIntersectionObserver() {
     if (checkObserver) return;
