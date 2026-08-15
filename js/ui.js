@@ -32,6 +32,7 @@ let bgCheckerPlayer = null;
 let bgCheckerQueue = [];
 let bgCheckerProcessing = false;
 let checkObserver = null;
+let bgCheckerTimeout = null;
 
 const checkerDiv = document.createElement('div');
 checkerDiv.id = 'tmkoc-bg-checker';
@@ -43,18 +44,25 @@ checkerDiv.style.left = '-9999px';
 checkerDiv.style.opacity = '0';
 document.body.appendChild(checkerDiv);
 
-window.onYouTubeIframeAPIReady = function() {
-    bgCheckerPlayer = new window.YT.Player('tmkoc-bg-checker', {
-        height: '1',
-        width: '1',
-        playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1 },
-        events: {
-            'onReady': processBgCheckerQueue,
-            'onStateChange': onBgCheckerStateChange,
-            'onError': onBgCheckerError
-        }
-    });
-};
+function initBgChecker() {
+    if (bgCheckerPlayer) return;
+    if (window.YT && window.YT.Player) {
+        bgCheckerPlayer = new window.YT.Player('tmkoc-bg-checker', {
+            height: '1',
+            width: '1',
+            playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'rel': 0, 'mute': 1 },
+            events: {
+                'onReady': processBgCheckerQueue,
+                'onStateChange': onBgCheckerStateChange,
+                'onError': onBgCheckerError
+            }
+        });
+    }
+}
+
+window.onYouTubeIframeAPIReady = initBgChecker;
+setTimeout(initBgChecker, 1000);
+setTimeout(initBgChecker, 3000);
 
 function processBgCheckerQueue() {
     if (bgCheckerProcessing || bgCheckerQueue.length === 0 || !bgCheckerPlayer || typeof bgCheckerPlayer.loadVideoById !== 'function') return;
@@ -64,6 +72,16 @@ function processBgCheckerQueue() {
     
     try {
         bgCheckerPlayer.loadVideoById({videoId: article.videoId});
+        
+        // Timeout to assume available if no error fires in 2.5 seconds
+        if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
+        bgCheckerTimeout = setTimeout(() => {
+            if (bgCheckerQueue.length > 0 && bgCheckerQueue[0].id === article.id) {
+                try { bgCheckerPlayer.stopVideo(); } catch(e) {}
+                handleCheckerResult(article, false);
+            }
+        }, 2500);
+        
     } catch(e) {
         bgCheckerProcessing = false;
         bgCheckerQueue.shift();
@@ -72,6 +90,7 @@ function processBgCheckerQueue() {
 }
 
 function handleCheckerResult(article, isUnavailable) {
+    if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
     try {
         const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
         cache[article.epNumber] = { time: Date.now(), blocked: isUnavailable };
