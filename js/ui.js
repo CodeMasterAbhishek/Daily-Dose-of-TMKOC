@@ -33,6 +33,7 @@ let bgCheckerQueue = [];
 let bgCheckerProcessing = false;
 let checkObserver = null;
 let bgCheckerTimeout = null;
+const verifiedVideos = new Set();
 
 const checkerDiv = document.createElement('div');
 checkerDiv.id = 'tmkoc-bg-checker';
@@ -73,14 +74,14 @@ function processBgCheckerQueue() {
     try {
         bgCheckerPlayer.loadVideoById({videoId: article.videoId});
         
-        // Timeout to assume available if no error fires in 2.5 seconds
+        // Timeout to assume available if no error fires in 6 seconds (slow VPNs)
         if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
         bgCheckerTimeout = setTimeout(() => {
             if (bgCheckerQueue.length > 0 && bgCheckerQueue[0].id === article.id) {
                 try { bgCheckerPlayer.stopVideo(); } catch(e) {}
                 handleCheckerResult(article, false);
             }
-        }, 2500);
+        }, 6000);
         
     } catch(e) {
         bgCheckerProcessing = false;
@@ -92,9 +93,7 @@ function processBgCheckerQueue() {
 function handleCheckerResult(article, isUnavailable) {
     if (bgCheckerTimeout) clearTimeout(bgCheckerTimeout);
     try {
-        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-        cache[article.epNumber] = { time: Date.now(), blocked: isUnavailable };
-        localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+        verifiedVideos.add(article.id);
         
         const card = document.querySelector(`.card[data-id="${article.id}"]`);
         if (card) {
@@ -128,18 +127,12 @@ function initIntersectionObserver() {
                 const id = card.getAttribute('data-id');
                 const article = allArticlesMap[id];
                 if (article && article.videoId) {
-                    // Check if we need to verify this video
-                    try {
-                        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                        const cacheEntry = cache[article.epNumber];
-                        // Cache for 6 hours
-                        if (!cacheEntry || (Date.now() - cacheEntry.time > 6 * 60 * 60 * 1000)) {
-                            if (!bgCheckerQueue.some(a => a.id === article.id)) {
-                                bgCheckerQueue.push(article);
-                                processBgCheckerQueue();
-                            }
+                    if (!verifiedVideos.has(article.id)) {
+                        if (!bgCheckerQueue.some(a => a.id === article.id)) {
+                            bgCheckerQueue.push(article);
+                            processBgCheckerQueue();
                         }
-                    } catch(e) {}
+                    }
                 }
                 checkObserver.unobserve(card);
             }
@@ -261,19 +254,6 @@ function createCardHTML(article) {
     const completed = getCompletedWatchedList();
     if (completed.includes(article.id)) {
         readClass = 'read-article watched-article';
-    }
-
-    let isUnavail = false;
-    try {
-        const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-        const cacheEntry = cache[article.epNumber];
-        if (cacheEntry && (Date.now() - cacheEntry.time < 6 * 60 * 60 * 1000)) {
-            if (cacheEntry.blocked) isUnavail = true;
-        }
-    } catch(e) {}
-    
-    if (isUnavail) {
-        readClass += ' ep-unavailable';
     }
 
     const timestamps = getTimestamps();
@@ -513,12 +493,10 @@ function openCleanPlayer(article) {
                     'onError': function(event) {
                         if (modalWarning) {
                             modalWarning.style.display = 'block';
-                            modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked in your region, made private, or removed. Try using a VPN or searching SonyLIV. (Code: ${event.data})`;
+                            modalWarning.innerHTML = `⚠️ <strong>Video Unavailable:</strong> YouTube refused to play this video. It may be geo-blocked, made private, or Sony disabled embedding. <a href="https://www.youtube.com/watch?v=${article.videoId}" target="_blank" style="color: #d97706; text-decoration: underline;">Watch directly on YouTube</a>. (Code: ${event.data})`;
                         }
                         try {
-                            const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                            cache[article.epNumber] = { time: Date.now(), blocked: true };
-                            localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
+                            verifiedVideos.add(article.id);
                             const card = document.querySelector(`.card[data-id="${article.id}"]`);
                             if (card && !card.classList.contains('ep-unavailable')) {
                                 card.classList.add('ep-unavailable');
@@ -529,10 +507,7 @@ function openCleanPlayer(article) {
                         if (event.data === window.YT.PlayerState.PLAYING) {
                             currentActiveEpId = article.id;
                             try {
-                                const cache = JSON.parse(localStorage.getItem('tmkoc_unavailable_cache') || '{}');
-                                cache[article.epNumber] = { time: Date.now(), blocked: false };
-                                localStorage.setItem('tmkoc_unavailable_cache', JSON.stringify(cache));
-                                
+                                verifiedVideos.add(article.id);
                                 const card = document.querySelector(`.card[data-id="${article.id}"]`);
                                 if (card) card.classList.remove('ep-unavailable');
                             } catch(e) {}
