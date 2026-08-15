@@ -453,27 +453,12 @@ function openCleanPlayer(article) {
             </div>
         `;
         document.body.appendChild(backdrop);
-        
-        // Fetch GeoIP
-        fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
-            window.userIsIndia = (data.country_code === 'IN');
-        }).catch(() => {});
+
     }
 
     const modalWarning = document.getElementById('clean-modal-warning');
-    if (modalWarning && article.airDate) {
-        const epDate = new Date(article.airDate);
-        if (!isNaN(epDate.getTime())) {
-            const daysOld = (Date.now() - epDate.getTime()) / (1000 * 3600 * 24);
-            if (window.userIsIndia && daysOld < 7) {
-                modalWarning.style.display = 'block';
-                modalWarning.innerHTML = '⚠️ <strong>Geo-Block Notice:</strong> This recent episode is likely blocked by Sony on YouTube in India. If the video below says "Unavailable", please turn on your VPN or watch directly on SonyLIV.';
-            } else {
-                modalWarning.style.display = 'none';
-            }
-        } else {
-            modalWarning.style.display = 'none';
-        }
+    if (modalWarning) {
+        modalWarning.style.display = 'none'; // Ensure it's hidden by default, ytPlayer onError will show it if needed
     }
 
     document.getElementById('clean-title').textContent = article.title;
