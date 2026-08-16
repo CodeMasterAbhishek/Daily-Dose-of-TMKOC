@@ -9,7 +9,6 @@ function extractVideoId(url) {
 }
 
 function getCategoryForEp(epNum) {
-    if (epNum >= 4450) return 'Trending';
     if (epNum <= 500) return 'Classic';
     if (epNum <= 1500) return 'Golden';
     if (epNum <= 3000) return 'Modern';
@@ -126,9 +125,50 @@ export async function fetchNewsData() {
 
 export async function fetchStorylines() {
     try {
-        const response = await fetch(`storylines.json?t=${new Date().getTime()}`);
+        const response = await fetch(`storylines.csv?t=${new Date().getTime()}`);
         if (!response.ok) return [];
-        return await response.json();
+        
+        const text = await response.text();
+        const lines = text.split('\n');
+        const storylines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Format: id,title,url,date,duration,part
+            // Simple split for now since titles usually don't have unescaped commas in our script output
+            const parts = line.split(',');
+            if (parts.length >= 6) {
+                const id = parts[0];
+                const title = parts.slice(1, -4).join(','); // Title might have commas
+                const url = parts[parts.length - 4];
+                const date = parts[parts.length - 3];
+                const duration = parts[parts.length - 2];
+                const partLabel = parts[parts.length - 1];
+                
+                const videoId = extractVideoId(url);
+                const isUnavailable = false; 
+
+                storylines.push({
+                    id: id,
+                    source: "Storylines",
+                    author: "Sony SAB",
+                    title: title,
+                    url: url,
+                    videoId: videoId,
+                    urlToImage: `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+                    publishedAt: date,
+                    category: "Storyline",
+                    epNumber: id,
+                    isUnavailable: isUnavailable,
+                    durationText: duration,
+                    partLabel: partLabel // NEW field for badges
+                });
+            }
+        }
+        
+        return storylines;
     } catch (e) {
         console.error("Could not fetch storylines dataset:", e);
         return [];

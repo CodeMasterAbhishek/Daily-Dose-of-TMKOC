@@ -1,0 +1,35 @@
+name: Sync Storylines
+
+on:
+  schedule:
+    # Run once a week on Sundays at midnight UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  sync_storylines:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install scrapetube
+
+    - name: Run Auto-Updater
+      run: python update_storylines.py
+
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add storylines.csv
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: Sync storylines [skip ci]" && git push)
