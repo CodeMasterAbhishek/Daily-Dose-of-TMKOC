@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Daily Dose of TMKOC 🚂</h1>
-  <p>A premium, blazing-fast, serverless TMKOC video aggregator web application powered entirely by GitHub Pages & Actions.</p>
+  <p>A fast, serverless web application that aggregates all episodes of Taarak Mehta Ka Ooltah Chashmah, powered entirely by GitHub Pages and Actions.</p>
 
   <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml">
     <img src="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml/badge.svg" alt="Daily Sync Status">
@@ -17,29 +17,29 @@
 
 ---
 
-## Project Overview
+## What is this?
 
-**Daily Dose of TMKOC** is a modern **GitOps-driven video application**. 
+**Daily Dose of TMKOC** is a web app built to organize and stream all 4,500+ episodes of the show *Taarak Mehta Ka Ooltah Chashmah*. 
 
-Instead of paying for backend servers or risking third-party rate limits, this project uses GitHub Actions to automate episode discovery and state tracking. It compiles all 4,500+ episodes into a static dataset (`episodes.csv`) served globally via GitHub Pages CDN.
+Instead of dealing with backend servers or databases, I built this project to run completely for free using [GitHub Actions](https://github.com/features/actions) for automation and [GitHub Pages](https://pages.github.com/) for hosting. The app automatically looks for new episodes uploaded by Sony SAB on YouTube every day, updates a simple `.csv` file, and pushes the changes live to the website.
 
-1. **Automated Scraping & Sync Engine:** Runs daily via GitHub Actions to detect newly released episodes (Sony SAB / Sony PAL) and append them to the master database.
-2. **Glassmorphic UI & Custom Video Player:** Features a custom HTML5/YouTube IFrame video player with Play/Pause, Seek bar, Speed selector (0.75x – 2.0x), Fullscreen, and Episode Navigation.
+### How it's built
+- **Frontend:** Built with plain [HTML](https://developer.mozilla.org/en-US/docs/Web/HTML), [Vanilla CSS](https://developer.mozilla.org/en-US/docs/Web/CSS), and [Vanilla JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript). No heavy frameworks like React or Vue.
+- **Backend/Automation:** A lightweight Python script powered by [scrapetube](https://github.com/dermasmid/scrapetube) runs daily on GitHub Actions to scrape YouTube for new episodes. 
+- **Database:** All episode data is stored in a static `episodes.csv` file, making it incredibly fast to load globally via GitHub's CDN.
 
 ---
 
 ## Features
 
-- ** Custom Video Player:** Interactive player modal with seek scrubbing, volume/fullscreen, playback speed control (0.75x to 2x), and Next/Prev episode buttons.
-- ** Modern Glassmorphism UI:** Clean light/dark mode switcher, featured hero carousel, and Storylines viewer.
-- ** Smart Geo-Block Caching:** Intelligently caches video availability using `localStorage` for lightning-fast loads, automatically invalidating when a VPN connection or IP change is detected.
-- ** 100% Serverless & Free:** Hosted entirely on GitHub Pages CDN with $0 operational cost.
-- ** Automated Daily Sync Bot:** Runs every night at 18:00 UTC (11:30 PM IST) to search for new daily episodes.
-- ** 4,500+ Episode Database:** Pre-indexed dataset of all Taarak Mehta Ka Ooltah Chashmah episodes with zero missing data.
+- **Custom Video Player:** I built a custom player on top of the [YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference). It supports scrubbing, volume controls, fullscreen, playback speed (0.75x to 2x), and easy Next/Prev episode navigation.
+- **Clean UI:** A modern interface with a light/dark mode switcher, a featured carousel, and a section for curated "Storylines" (multi-episode arcs).
+- **Smart Caching:** To keep the site fast and avoid hitting YouTube too often, the app uses `localStorage` to cache which videos are available in your region. If you change your location (like connecting to a VPN), the site automatically detects your new IP address using [ipify](https://www.ipify.org/) and refreshes the cache so you can watch unlocked videos instantly.
+- **Zero Running Costs:** Because everything is hosted on GitHub Pages and Actions, the project costs $0 to maintain.
 
 ---
 
-## Architecture Flow
+## How the Automation Works
 
 ```mermaid
 sequenceDiagram
@@ -81,19 +81,21 @@ tmkoc-youtube-playlist-bot/
 
 ## Setup & Deployment
 
-### 1. Clone Repository
+If you want to run your own version of this:
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot.git
 cd tmkoc-youtube-playlist-bot
 ```
 
 ### 2. Enable GitHub Pages
-- Go to **Settings > Pages**.
-- Set Source to **Deploy from a branch**.
-- Select branch `main` and folder `/ (root)`.
-- Save — your website will be live at `https://<username>.github.io/<repository>/`!
+- Go to your repository **Settings > Pages**.
+- Set the Source to **Deploy from a branch**.
+- Select the `main` branch and the `/ (root)` folder.
+- Save the settings. Your website will be live at `https://<username>.github.io/<repository>/` in a few minutes!
 
 ---
 
 ## License
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details. Video content rights belong exclusively to Sony SAB / Sony PAL / Sony LIV.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details. Note that all video content rights belong exclusively to Sony SAB, Sony PAL, and Sony LIV.
