@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Daily Dose of TMKOC 🚂</h1>
-  <p>A premium, blazing-fast, serverless video aggregator & YouTube playlist sync bot powered entirely by GitHub Pages & Actions.</p>
+  <p>A premium, blazing-fast, serverless TMKOC video aggregator web application powered entirely by GitHub Pages & Actions.</p>
 
   <a href="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml">
     <img src="https://github.com/CodeMasterAbhishek/tmkoc-youtube-playlist-bot/actions/workflows/daily_sync.yml/badge.svg" alt="Daily Sync Status">
