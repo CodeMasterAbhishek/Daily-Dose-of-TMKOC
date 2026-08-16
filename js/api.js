@@ -128,7 +128,9 @@ export async function fetchStorylines() {
     try {
         const response = await fetch(`storylines.json?t=${new Date().getTime()}`);
         if (!response.ok) return [];
-        return await response.json();
+        const data = await response.json();
+        // Sort in decreasing order (newest storylines first)
+        return data.sort((a, b) => b.startEp - a.startEp);
     } catch (e) {
         console.error("Could not fetch storylines dataset:", e);
         return [];
