@@ -42,6 +42,9 @@ def is_promo(title: str) -> bool:
         return True
     return False
 
+def is_geoblocked_title(title: str) -> bool:
+    return "new episode" in title.lower()
+
 def is_single_episode(title: str, description: str, channel: str, ep_num: int, require_full: bool = False) -> bool:
     # Strict channel filter
     valid_channels = ['sony sab', 'sony pal', 'taarak mehta ka ooltah chashmah', 'taarak mehta ka ooltah chashmah episodes']
@@ -288,18 +291,24 @@ def main():
                     
                     old_is_promo = is_promo(title)
                     new_is_promo = is_promo(new_title)
+                    old_is_geoblocked = is_geoblocked_title(title)
+                    new_is_geoblocked = is_geoblocked_title(new_title)
                     
                     should_upgrade = False
                     if old_is_promo and not new_is_promo:
                         should_upgrade = True
-                    elif new_mins > current_mins + 1:
+                    elif old_is_geoblocked and not new_is_geoblocked and new_mins >= 18:
                         should_upgrade = True
-                    elif is_recent and new_mins >= 18:
-                        # For recent episodes, if we found a new full episode (>18 mins) via relevance sort,
-                        # accept it. Sony often replaces geo-blocked early uploads with public uploads later.
-                        # Only upgrade if the video ID is actually different!
-                        if vid_id != row[2].split('v=')[-1]:
+                    elif new_mins > current_mins + 1:
+                        # Only upgrade on duration if we aren't downgrading public -> geoblocked
+                        if not (not old_is_geoblocked and new_is_geoblocked):
                             should_upgrade = True
+                    elif is_recent and new_mins >= 18:
+                        # For recent episodes, accept new full episodes via relevance sort.
+                        # Only upgrade if the video ID is different AND it's not a downgrade to geoblocked!
+                        if vid_id != row[2].split('v=')[-1]:
+                            if not (not old_is_geoblocked and new_is_geoblocked):
+                                should_upgrade = True
                         
                     if should_upgrade:
                         print(f"  [UPGRADED] Ep {ep_num}: {new_title} ({new_duration_str})")
