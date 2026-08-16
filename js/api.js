@@ -9,7 +9,6 @@ function extractVideoId(url) {
 }
 
 function getCategoryForEp(epNum) {
-    if (epNum >= 4450) return 'Trending';
     if (epNum <= 500) return 'Classic';
     if (epNum <= 1500) return 'Golden';
     if (epNum <= 3000) return 'Modern';
