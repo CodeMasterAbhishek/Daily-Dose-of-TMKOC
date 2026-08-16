@@ -49,7 +49,8 @@ function extractRealDate(title, epNum) {
 
 export async function fetchNewsData() {
     try {
-        const response = await fetch(`episodes.csv?t=${new Date().getTime()}`);
+        const cacheBuster = Math.floor(Date.now() / 3600000);
+        const response = await fetch(`episodes.csv?t=${cacheBuster}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -125,7 +126,8 @@ export async function fetchNewsData() {
 
 export async function fetchStorylines() {
     try {
-        const response = await fetch(`storylines.json?t=${new Date().getTime()}`);
+        const cacheBuster = Math.floor(Date.now() / 3600000);
+        const response = await fetch(`storylines.json?t=${cacheBuster}`);
         if (!response.ok) return [];
         const data = await response.json();
         // Sort in decreasing order (newest storylines first)

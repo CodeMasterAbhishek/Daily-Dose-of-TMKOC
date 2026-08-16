@@ -111,9 +111,37 @@ function processBgCheckerQueue() {
     }
 }
 
+function getCheckerCache() {
+    try {
+        const cache = JSON.parse(localStorage.getItem("tmkoc_checker_cache") || "{}");
+        const now = Date.now();
+        for (const key in cache) {
+            if (now - cache[key].timestamp > 3600000) {
+                delete cache[key];
+            }
+        }
+        localStorage.setItem("tmkoc_checker_cache", JSON.stringify(cache));
+        return cache;
+    } catch(e) {
+        return {};
+    }
+}
+
+function setCheckerCache(videoId, isUnavailable) {
+    try {
+        const cache = getCheckerCache();
+        cache[videoId] = {
+            isUnavailable: isUnavailable,
+            timestamp: Date.now()
+        };
+        localStorage.setItem("tmkoc_checker_cache", JSON.stringify(cache));
+    } catch(e) {}
+}
+
 function handleCheckerResult(article, isUnavailable) {
     try {
         verifiedVideos.add(article.id);
+        setCheckerCache(article.videoId, isUnavailable);
         
         const card = document.querySelector(`.card[data-id="${article.id}"]`);
         if (card) {
@@ -139,9 +167,17 @@ function initIntersectionObserver() {
                 const article = allArticlesMap[id];
                 if (article && article.videoId) {
                     if (!verifiedVideos.has(article.id)) {
-                        if (!bgCheckerQueue.some(a => a.id === article.id)) {
-                            bgCheckerQueue.push(article);
-                            processBgCheckerQueue();
+                        const cache = getCheckerCache();
+                        if (cache[article.videoId]) {
+                            verifiedVideos.add(article.id);
+                            if (cache[article.videoId].isUnavailable) {
+                                card.classList.add('ep-unavailable');
+                            }
+                        } else {
+                            if (!bgCheckerQueue.some(a => a.id === article.id)) {
+                                bgCheckerQueue.push(article);
+                                processBgCheckerQueue();
+                            }
                         }
                     }
                 }
