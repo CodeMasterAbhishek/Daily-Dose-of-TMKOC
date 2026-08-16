@@ -271,6 +271,11 @@ function createCardHTML(article) {
     const savedTimeSec = timestamps[article.id] || 0;
     const progressPercent = savedTimeSec ? Math.min(100, Math.round((savedTimeSec / 1260) * 100)) : 0;
     
+    let badgeText = `EP ${article.epNumber}`;
+    if (article.category === "Storyline") {
+        badgeText = article.partLabel ? `MOVIE - ${article.partLabel}` : `MOVIE`;
+    }
+
     return `
         <article class="card ${readClass}" data-id="${article.id}" data-category="${article.category.toLowerCase()}">
             <a href="javascript:void(0)" class="card-img-wrap" onclick="playEpisode('${article.id}')">
@@ -280,9 +285,9 @@ function createCardHTML(article) {
             </a>
             <div class="card-content">
                 <div class="card-meta">
-                    <span class="card-source" style="font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">EP ${article.epNumber}</span>
+                    <span class="card-source" style="font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">${badgeText}</span>
                     <span>•</span>
-                    <span class="card-date">${article.airDate || ''}</span>
+                    <span class="card-date">${article.publishedAt || ''}</span>
                 </div>
                 <h2 class="card-title">
                     <a href="javascript:void(0)" onclick="playEpisode('${article.id}')">${article.title}</a>
