@@ -317,13 +317,19 @@ function createCardHTML(article) {
     if (completed.includes(article.id)) {
         readClass = 'read-article watched-article';
     }
+    
+    let unavailableClass = '';
+    const cache = getCheckerCache();
+    if (cache[article.videoId] && cache[article.videoId].isUnavailable) {
+        unavailableClass = 'ep-unavailable';
+    }
 
     const timestamps = getTimestamps();
     const savedTimeSec = timestamps[article.id] || 0;
     const progressPercent = savedTimeSec ? Math.min(100, Math.round((savedTimeSec / 1260) * 100)) : 0;
     
     return `
-        <article class="card ${readClass}" data-id="${article.id}" data-category="${article.category.toLowerCase()}">
+        <article class="card ${readClass} ${unavailableClass}" data-id="${article.id}" data-category="${article.category.toLowerCase()}">
             <a href="javascript:void(0)" class="card-img-wrap" onclick="playEpisode('${article.id}')">
                 <img src="${imageUrl}" alt="${article.title}" loading="lazy" class="card-img" onerror="this.src='https://via.placeholder.com/480x270/18181b/818cf8?text=TMKOC+Episode'">
                 <span class="card-duration-badge">${article.durationText || '21:45'}</span>
