@@ -31,7 +31,8 @@ Instead of paying for backend servers or risking third-party rate limits, this p
 ## Features
 
 - ** Custom Video Player:** Interactive player modal with seek scrubbing, volume/fullscreen, playback speed control (0.75x to 2x), and Next/Prev episode buttons.
-- ** Modern Glassmorphism UI:** Clean light/dark mode switcher, featured hero carousel, and era category filter pills (`Classic`, `Golden`, `Modern`, `Recent`).
+- ** Modern Glassmorphism UI:** Clean light/dark mode switcher, featured hero carousel, and Storylines viewer.
+- ** Smart Geo-Block Caching:** Intelligently caches video availability using `localStorage` for lightning-fast loads, automatically invalidating when a VPN connection or IP change is detected.
 - ** 100% Serverless & Free:** Hosted entirely on GitHub Pages CDN with $0 operational cost.
 - ** Automated Daily Sync Bot:** Runs every night at 18:00 UTC (11:30 PM IST) to search for new daily episodes.
 - ** 4,500+ Episode Database:** Pre-indexed dataset of all Taarak Mehta Ka Ooltah Chashmah episodes with zero missing data.
