@@ -111,6 +111,21 @@ function processBgCheckerQueue() {
     }
 }
 
+export async function initializeIpCache() {
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        const currentIp = data.ip;
+        
+        const lastIp = localStorage.getItem("tmkoc_last_ip");
+        if (lastIp && lastIp !== currentIp) {
+            // IP changed (VPN toggled). Invalidate the geo cache.
+            localStorage.removeItem("tmkoc_checker_cache");
+        }
+        localStorage.setItem("tmkoc_last_ip", currentIp);
+    } catch (e) {}
+}
+
 function getCheckerCache() {
     try {
         const cache = JSON.parse(localStorage.getItem("tmkoc_checker_cache") || "{}");
