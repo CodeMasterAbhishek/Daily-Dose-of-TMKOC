@@ -733,6 +733,11 @@ function renderLeaderboardList(userHandle, userCount, userHours, userLevel) {
     leaderboardEl.innerHTML = html;
 }
 
+window.closeFanModal = function() {
+    const backdrop = document.getElementById('fan-modal-backdrop');
+    if (backdrop) backdrop.style.display = 'none';
+};
+
 window.saveUserHandle = function() {
     const input = document.getElementById('user-handle-input');
     if (input && input.value.trim()) {
