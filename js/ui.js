@@ -487,6 +487,7 @@ function openCleanPlayer(article) {
 
     let backdrop = document.getElementById('tmkoc-clean-backdrop');
     if (!backdrop) {
+        const autoplayState = localStorage.getItem('autoplayNext') !== 'false' ? 'checked' : '';
         backdrop = document.createElement('div');
         backdrop.id = 'tmkoc-clean-backdrop';
         backdrop.className = 'tmkoc-modal-backdrop';
@@ -503,8 +504,14 @@ function openCleanPlayer(article) {
                 <div class="tmkoc-video-viewport">
                     <div id="clean-iframe-container"></div>
                 </div>
-                <div class="tmkoc-modal-footer">
+                <div class="tmkoc-modal-footer" style="justify-content: space-between; align-items: center; display: flex;">
                     <button class="tmkoc-nav-btn" onclick="navCleanEp(-1)">◀ Previous Ep</button>
+                    <div style="display: flex; align-items: center;">
+                        <label style="color: var(--text-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                            <input type="checkbox" id="autoplay-toggle" ${autoplayState} onchange="toggleAutoplay(this.checked)" style="accent-color: var(--text-primary); width: 16px; height: 16px; cursor: pointer;">
+                            Autoplay Next
+                        </label>
+                    </div>
                     <button class="tmkoc-nav-btn" onclick="navCleanEp(1)">Next Ep ▶</button>
                 </div>
             </div>
@@ -564,6 +571,10 @@ function openCleanPlayer(article) {
                                 const card = document.querySelector(`.card[data-id="${article.id}"]`);
                                 if (card) card.classList.remove('ep-unavailable');
                             } catch(e) {}
+                        } else if (event.data === window.YT.PlayerState.ENDED) {
+                            if (localStorage.getItem('autoplayNext') !== 'false') {
+                                window.navCleanEp(1);
+                            }
                         }
                     }
                 }
@@ -598,6 +609,10 @@ window.closeCleanPlayer = function() {
     if (iframe) iframe.src = '';
     document.body.style.overflow = 'auto';
     stopActiveWatchTracker();
+};
+
+window.toggleAutoplay = function(checked) {
+    localStorage.setItem('autoplayNext', checked);
 };
 
 window.navCleanEp = function(dir) {
